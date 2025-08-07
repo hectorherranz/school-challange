@@ -1,3 +1,6 @@
 package com.hectorherranz.schoolapi.application.command;
 
-public record DeleteSchoolCommand() {}
+import jakarta.validation.constraints.NotNull;
+import java.util.UUID;
+
+public record DeleteSchoolCommand(@NotNull UUID schoolId) {}
