@@ -12,15 +12,16 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 public class GetStudentByIdHandler implements GetStudentByIdUseCase {
 
-    private final StudentRepositoryPort studentRepository;
+  private final StudentRepositoryPort studentRepository;
 
-    public GetStudentByIdHandler(StudentRepositoryPort studentRepository) {
-        this.studentRepository = studentRepository;
-    }
+  public GetStudentByIdHandler(StudentRepositoryPort studentRepository) {
+    this.studentRepository = studentRepository;
+  }
 
-    @Override
-    public Student handle(GetStudentByIdQuery query) {
-        return studentRepository.findById(query.studentId())
-                .orElseThrow(() -> new NotFoundException("Student", query.studentId().toString()));
-    }
+  @Override
+  public Student handle(GetStudentByIdQuery query) {
+    return studentRepository
+        .findById(query.studentId())
+        .orElseThrow(() -> new NotFoundException("Student", query.studentId().toString()));
+  }
 }

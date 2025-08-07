@@ -12,15 +12,15 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 public class SearchStudentsHandler implements SearchStudentsUseCase {
 
-    private final StudentRepositoryPort studentRepository;
+  private final StudentRepositoryPort studentRepository;
 
-    public SearchStudentsHandler(StudentRepositoryPort studentRepository) {
-        this.studentRepository = studentRepository;
-    }
+  public SearchStudentsHandler(StudentRepositoryPort studentRepository) {
+    this.studentRepository = studentRepository;
+  }
 
-    @Override
-    public PagedResponse<Student> handle(SearchStudentsQuery query) {
-        var page = studentRepository.search(query.schoolId(), query.query(), query.pageable());
-        return PagedResponse.from(page);
-    }
+  @Override
+  public PagedResponse<Student> handle(SearchStudentsQuery query) {
+    var page = studentRepository.search(query.schoolId(), query.query(), query.pageable());
+    return PagedResponse.from(page);
+  }
 }

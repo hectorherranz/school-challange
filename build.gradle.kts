@@ -26,7 +26,9 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-actuator")   // runtime health
     implementation("org.liquibase:liquibase-core")
+    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0")  // Swagger UI
     runtimeOnly("org.postgresql:postgresql")
+    runtimeOnly("com.h2database:h2")  // For development/testing
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.junit.jupiter:junit-jupiter-api")
     testImplementation("com.h2database:h2")

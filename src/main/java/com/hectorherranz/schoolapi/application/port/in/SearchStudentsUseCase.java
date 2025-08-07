@@ -5,5 +5,5 @@ import com.hectorherranz.schoolapi.application.response.PagedResponse;
 import com.hectorherranz.schoolapi.domain.model.Student;
 
 public interface SearchStudentsUseCase {
-    PagedResponse<Student> handle(SearchStudentsQuery query);
+  PagedResponse<Student> handle(SearchStudentsQuery query);
 }

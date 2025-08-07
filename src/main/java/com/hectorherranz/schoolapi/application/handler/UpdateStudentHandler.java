@@ -12,26 +12,24 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public class UpdateStudentHandler implements UpdateStudentUseCase {
 
-    private final StudentRepositoryPort studentRepository;
+  private final StudentRepositoryPort studentRepository;
 
-    public UpdateStudentHandler(StudentRepositoryPort studentRepository) {
-        this.studentRepository = studentRepository;
-    }
+  public UpdateStudentHandler(StudentRepositoryPort studentRepository) {
+    this.studentRepository = studentRepository;
+  }
 
-    @Override
-    public void handle(UpdateStudentCommand command) {
-        // Find the student
-        Student student = studentRepository.findById(command.studentId())
-                .orElseThrow(() -> new NotFoundException("Student", command.studentId().toString()));
+  @Override
+  public void handle(UpdateStudentCommand command) {
+    // Find the student
+    Student student =
+        studentRepository
+            .findById(command.studentId())
+            .orElseThrow(() -> new NotFoundException("Student", command.studentId().toString()));
 
-        // Create updated student with new name
-        Student updatedStudent = new Student(
-                student.id(),
-                command.name(),
-                student.schoolId()
-        );
+    // Create updated student with new name
+    Student updatedStudent = new Student(student.id(), command.name(), student.schoolId());
 
-        // Save the updated student
-        studentRepository.save(updatedStudent);
-    }
+    // Save the updated student
+    studentRepository.save(updatedStudent);
+  }
 }

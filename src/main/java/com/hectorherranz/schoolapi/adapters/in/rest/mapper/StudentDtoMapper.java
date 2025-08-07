@@ -10,19 +10,15 @@ import org.springframework.stereotype.Component;
 @Component
 public class StudentDtoMapper {
 
-    public CreateStudentCommand toCreateCommand(StudentRequest request) {
-        return new CreateStudentCommand(request.name(), request.schoolId());
-    }
+  public CreateStudentCommand toCreateCommand(StudentRequest request) {
+    return new CreateStudentCommand(request.name(), request.schoolId());
+  }
 
-    public UpdateStudentCommand toUpdateCommand(java.util.UUID studentId, String name) {
-        return new UpdateStudentCommand(studentId, name);
-    }
+  public UpdateStudentCommand toUpdateCommand(java.util.UUID studentId, String name) {
+    return new UpdateStudentCommand(studentId, name);
+  }
 
-    public StudentResponse toResponse(Student student) {
-        return new StudentResponse(
-            student.id(),
-            student.name(),
-            student.schoolId()
-        );
-    }
+  public StudentResponse toResponse(Student student) {
+    return new StudentResponse(student.id(), student.name(), student.schoolId());
+  }
 }

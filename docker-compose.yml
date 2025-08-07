@@ -10,14 +10,19 @@ services:
       POSTGRES_PASSWORD: postgres
     ports:
       - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
       timeout: 5s
       retries: 5
+    restart: unless-stopped
 
   api:
-    image: hectorherranz/school-api:latest   # construida con tu Dockerfile
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
     container_name: school-api
     depends_on:
       db:
@@ -26,6 +31,17 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/schooldb
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: postgres
+      SPRING_PROFILES_ACTIVE: prod
     ports:
       - "8080:8080"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+volumes:
+  postgres_data:
 

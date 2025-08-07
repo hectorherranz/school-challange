@@ -11,20 +11,20 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public class DeleteStudentHandler implements DeleteStudentUseCase {
 
-    private final StudentRepositoryPort studentRepository;
+  private final StudentRepositoryPort studentRepository;
 
-    public DeleteStudentHandler(StudentRepositoryPort studentRepository) {
-        this.studentRepository = studentRepository;
+  public DeleteStudentHandler(StudentRepositoryPort studentRepository) {
+    this.studentRepository = studentRepository;
+  }
+
+  @Override
+  public void handle(DeleteStudentCommand command) {
+    // Check if student exists before deleting
+    if (!studentRepository.findById(command.studentId()).isPresent()) {
+      throw new NotFoundException("Student", command.studentId().toString());
     }
 
-    @Override
-    public void handle(DeleteStudentCommand command) {
-        // Check if student exists before deleting
-        if (!studentRepository.findById(command.studentId()).isPresent()) {
-            throw new NotFoundException("Student", command.studentId().toString());
-        }
-
-        // Delete the student
-        studentRepository.deleteById(command.studentId());
-    }
+    // Delete the student
+    studentRepository.deleteById(command.studentId());
+  }
 }

@@ -7,36 +7,37 @@ import com.hectorherranz.schoolapi.domain.model.School;
 import com.hectorherranz.schoolapi.domain.model.Student;
 import com.hectorherranz.schoolapi.domain.model.draft.StudentDraft;
 import com.hectorherranz.schoolapi.domain.repository.SchoolRepositoryPort;
+import java.util.UUID;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.UUID;
 
 @Component
 @Transactional
 public class CreateStudentHandler implements CreateStudentUseCase {
 
-    private final SchoolRepositoryPort schoolRepository;
+  private final SchoolRepositoryPort schoolRepository;
 
-    public CreateStudentHandler(SchoolRepositoryPort schoolRepository) {
-        this.schoolRepository = schoolRepository;
-    }
+  public CreateStudentHandler(SchoolRepositoryPort schoolRepository) {
+    this.schoolRepository = schoolRepository;
+  }
 
-    @Override
-    public UUID handle(CreateStudentCommand command) {
-        // Find the school
-        School school = schoolRepository.findById(command.schoolId())
-                .orElseThrow(() -> new NotFoundException("School", command.schoolId().toString()));
+  @Override
+  public UUID handle(CreateStudentCommand command) {
+    // Find the school
+    School school =
+        schoolRepository
+            .findById(command.schoolId())
+            .orElseThrow(() -> new NotFoundException("School", command.schoolId().toString()));
 
-        // Create student draft
-        StudentDraft draft = new StudentDraft(command.name());
+    // Create student draft
+    StudentDraft draft = new StudentDraft(command.name());
 
-        // Enroll student through the school aggregate
-        Student student = school.enrollStudent(draft);
+    // Enroll student through the school aggregate
+    Student student = school.enrollStudent(draft);
 
-        // Save the updated school (which includes the new student)
-        schoolRepository.save(school);
+    // Save the updated school (which includes the new student)
+    schoolRepository.save(school);
 
-        return student.id();
-    }
+    return student.id();
+  }
 }

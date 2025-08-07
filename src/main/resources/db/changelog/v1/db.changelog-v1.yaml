@@ -2,7 +2,9 @@ databaseChangeLog:
   # Version 1 migrations - ordered by execution sequence
   - include:
       file: db/changelog/v1/TASK-001-init-schema.xml
+  - include:
+      file: db/changelog/v1/TASK-002-add-version-columns.xml
 
   # Future v1 migrations - add here in order
-  # - include: { file: db/changelog/v1/TASK-002-add-indexes.xml }
-  # - include: { file: db/changelog/v1/TASK-003-add-constraints.xml }
+  # - include: { file: db/changelog/v1/TASK-003-add-indexes.xml }
+  # - include: { file: db/changelog/v1/TASK-004-add-constraints.xml }
