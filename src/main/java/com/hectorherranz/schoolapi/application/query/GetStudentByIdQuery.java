@@ -1,3 +1,5 @@
 package com.hectorherranz.schoolapi.application.query;
 
-public record GetStudentByIdQuery() {}
+import java.util.UUID;
+
+public record GetStudentByIdQuery(UUID studentId) {}

@@ -1,3 +1,5 @@
 package com.hectorherranz.schoolapi.application.query;
 
-public record SearchSchoolsQuery() {}
+import org.springframework.data.domain.Pageable;
+
+public record SearchSchoolsQuery(String query, Pageable pageable) {}
