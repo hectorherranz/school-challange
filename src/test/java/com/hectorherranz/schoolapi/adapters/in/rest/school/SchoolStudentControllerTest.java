@@ -1,4 +1,4 @@
-package com.hectorherranz.schoolapi.adapters.in.rest;
+package com.hectorherranz.schoolapi.adapters.in.rest.school;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -25,7 +25,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 @ExtendWith(MockitoExtension.class)
-class StudentControllerTest {
+class SchoolStudentControllerTest {
 
   @Mock private CreateStudentUseCase createStudentUseCase;
 
@@ -39,12 +39,12 @@ class StudentControllerTest {
 
   @Mock private StudentDtoMapper studentDtoMapper;
 
-  private StudentController controller;
+  private SchoolStudentController controller;
 
   @BeforeEach
   void setUp() {
     controller =
-        new StudentController(
+        new SchoolStudentController(
             createStudentUseCase,
             getStudentByIdUseCase,
             updateStudentUseCase,
@@ -54,22 +54,22 @@ class StudentControllerTest {
   }
 
   @Test
-  void givenValidRequest_whenCreateStudent_thenReturns201WithLocation() {
+  void givenValidRequest_whenEnrollStudent_thenReturns201WithLocation() {
     // Arrange
     UUID studentId = UUID.randomUUID();
     UUID schoolId = UUID.randomUUID();
-    StudentRequest request = new StudentRequest("Harry Potter", schoolId);
+    StudentRequest request = new StudentRequest("Harry Potter");
     CreateStudentCommand expectedCommand = new CreateStudentCommand("Harry Potter", schoolId);
     Student student = new Student(studentId, "Harry Potter", schoolId);
     StudentResponse expectedResponse = new StudentResponse(studentId, "Harry Potter", schoolId);
 
-    when(studentDtoMapper.toCreateCommand(request)).thenReturn(expectedCommand);
+    when(studentDtoMapper.toCreateCommand(request, schoolId)).thenReturn(expectedCommand);
     when(createStudentUseCase.handle(expectedCommand)).thenReturn(studentId);
     when(getStudentByIdUseCase.handle(any())).thenReturn(student);
     when(studentDtoMapper.toResponse(student)).thenReturn(expectedResponse);
 
     // Act
-    ResponseEntity<StudentResponse> response = controller.createStudent(request);
+    ResponseEntity<StudentResponse> response = controller.enrollStudent(schoolId, request);
 
     // Assert
     assertEquals(HttpStatus.CREATED, response.getStatusCode());
@@ -78,7 +78,7 @@ class StudentControllerTest {
     assertEquals("Harry Potter", response.getBody().name());
     assertEquals(schoolId, response.getBody().schoolId());
 
-    verify(studentDtoMapper).toCreateCommand(request);
+    verify(studentDtoMapper).toCreateCommand(request, schoolId);
     verify(createStudentUseCase).handle(expectedCommand);
     verify(getStudentByIdUseCase).handle(any());
     verify(studentDtoMapper).toResponse(student);
@@ -96,7 +96,7 @@ class StudentControllerTest {
     when(studentDtoMapper.toResponse(student)).thenReturn(expectedResponse);
 
     // Act
-    ResponseEntity<StudentResponse> response = controller.getStudentById(studentId);
+    ResponseEntity<StudentResponse> response = controller.getStudentById(schoolId, studentId);
 
     // Assert
     assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -110,22 +110,44 @@ class StudentControllerTest {
   }
 
   @Test
+  void givenStudentFromDifferentSchool_whenGetStudentById_thenReturns404() {
+    // Arrange
+    UUID studentId = UUID.randomUUID();
+    UUID schoolId = UUID.randomUUID();
+    UUID differentSchoolId = UUID.randomUUID();
+    Student student = new Student(studentId, "Harry Potter", differentSchoolId);
+
+    when(getStudentByIdUseCase.handle(any())).thenReturn(student);
+
+    // Act
+    ResponseEntity<StudentResponse> response = controller.getStudentById(schoolId, studentId);
+
+    // Assert
+    assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+    assertNull(response.getBody());
+
+    verify(getStudentByIdUseCase).handle(any());
+    verify(studentDtoMapper, never()).toResponse(any());
+  }
+
+  @Test
   void givenValidRequest_whenUpdateStudent_thenReturns200() {
     // Arrange
     UUID studentId = UUID.randomUUID();
     UUID schoolId = UUID.randomUUID();
-    String newName = "Updated Student Name";
-    UpdateStudentCommand expectedCommand = new UpdateStudentCommand(studentId, newName);
+    String newName = "Updated Harry Potter";
+    UpdateStudentCommand expectedCommand = new UpdateStudentCommand(schoolId, studentId, newName);
     Student student = new Student(studentId, newName, schoolId);
     StudentResponse expectedResponse = new StudentResponse(studentId, newName, schoolId);
 
-    when(studentDtoMapper.toUpdateCommand(studentId, newName)).thenReturn(expectedCommand);
-    doNothing().when(updateStudentUseCase).handle(expectedCommand);
+    when(studentDtoMapper.toUpdateCommand(schoolId, studentId, newName))
+        .thenReturn(expectedCommand);
     when(getStudentByIdUseCase.handle(any())).thenReturn(student);
     when(studentDtoMapper.toResponse(student)).thenReturn(expectedResponse);
 
     // Act
-    ResponseEntity<StudentResponse> response = controller.updateStudent(studentId, newName);
+    ResponseEntity<StudentResponse> response =
+        controller.updateStudent(schoolId, studentId, newName);
 
     // Assert
     assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -134,174 +156,174 @@ class StudentControllerTest {
     assertEquals(newName, response.getBody().name());
     assertEquals(schoolId, response.getBody().schoolId());
 
-    verify(studentDtoMapper).toUpdateCommand(studentId, newName);
+    verify(studentDtoMapper).toUpdateCommand(schoolId, studentId, newName);
     verify(updateStudentUseCase).handle(expectedCommand);
     verify(getStudentByIdUseCase).handle(any());
     verify(studentDtoMapper).toResponse(student);
   }
 
   @Test
-  void givenValidId_whenDeleteStudent_thenReturns204() {
+  void givenValidId_whenRemoveStudent_thenReturns204() {
     // Arrange
     UUID studentId = UUID.randomUUID();
-    doNothing().when(deleteStudentUseCase).handle(any());
+    UUID schoolId = UUID.randomUUID();
 
     // Act
-    ResponseEntity<Void> response = controller.deleteStudent(studentId);
+    ResponseEntity<Void> response = controller.removeStudent(schoolId, studentId);
 
     // Assert
     assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
     assertNull(response.getBody());
-
-    verify(deleteStudentUseCase).handle(any());
   }
 
   @Test
-  void givenValidQuery_whenSearchStudents_thenReturnsPagedResponse() {
+  void givenValidQuery_whenListStudents_thenReturnsPagedResponse() {
     // Arrange
     UUID schoolId = UUID.randomUUID();
-    UUID studentId1 = UUID.randomUUID();
-    UUID studentId2 = UUID.randomUUID();
+    String query = "Harry";
+    int page = 0;
+    int size = 20;
 
-    Student student1 = new Student(studentId1, "Harry Potter", schoolId);
-    Student student2 = new Student(studentId2, "Hermione Granger", schoolId);
+    List<Student> students =
+        List.of(
+            createTestStudent(UUID.randomUUID(), "Harry Potter", schoolId),
+            createTestStudent(UUID.randomUUID(), "Harry Styles", schoolId));
 
-    StudentResponse response1 = new StudentResponse(studentId1, "Harry Potter", schoolId);
-    StudentResponse response2 = new StudentResponse(studentId2, "Hermione Granger", schoolId);
+    PagedResponse<Student> expectedPagedResponse =
+        new PagedResponse<>(students, page, size, 2L, 1, false, false);
 
-    PagedResponse<Student> pagedResponse =
-        new PagedResponse<>(List.of(student1, student2), 0, 20, 2, 1, false, false);
-
-    when(searchStudentsUseCase.handle(any())).thenReturn(pagedResponse);
-    when(studentDtoMapper.toResponse(student1)).thenReturn(response1);
-    when(studentDtoMapper.toResponse(student2)).thenReturn(response2);
+    when(searchStudentsUseCase.handle(any())).thenReturn(expectedPagedResponse);
+    when(studentDtoMapper.toResponse(any(Student.class)))
+        .thenAnswer(
+            invocation -> {
+              Student student = invocation.getArgument(0);
+              return createTestStudentResponse(student.id(), student.name(), student.schoolId());
+            });
 
     // Act
     ResponseEntity<PagedResponse<StudentResponse>> response =
-        controller.searchStudents(schoolId, "Harry", 0, 20);
+        controller.listStudents(schoolId, query, page, size);
 
     // Assert
     assertEquals(HttpStatus.OK, response.getStatusCode());
     assertNotNull(response.getBody());
     assertEquals(2, response.getBody().content().size());
-    assertEquals(0, response.getBody().pageNumber());
-    assertEquals(20, response.getBody().pageSize());
-    assertEquals(2, response.getBody().totalElements());
-    assertEquals(1, response.getBody().totalPages());
-    assertFalse(response.getBody().hasNext());
-    assertFalse(response.getBody().hasPrevious());
+    assertEquals(page, response.getBody().pageNumber());
+    assertEquals(size, response.getBody().pageSize());
+    assertEquals(2L, response.getBody().totalElements());
 
     verify(searchStudentsUseCase).handle(any());
-    verify(studentDtoMapper, times(2)).toResponse(any());
   }
 
   @Test
-  void givenEmptyQuery_whenSearchStudents_thenReturnsAllStudents() {
+  void givenEmptyQuery_whenListStudents_thenReturnsAllStudents() {
     // Arrange
     UUID schoolId = UUID.randomUUID();
-    UUID studentId = UUID.randomUUID();
-    Student student = new Student(studentId, "Harry Potter", schoolId);
-    StudentResponse expectedResponse = new StudentResponse(studentId, "Harry Potter", schoolId);
+    String query = "";
+    int page = 0;
+    int size = 20;
 
-    PagedResponse<Student> pagedResponse =
-        new PagedResponse<>(List.of(student), 0, 20, 1, 1, false, false);
+    List<Student> students =
+        List.of(
+            createTestStudent(UUID.randomUUID(), "Harry Potter", schoolId),
+            createTestStudent(UUID.randomUUID(), "Hermione Granger", schoolId));
 
-    when(searchStudentsUseCase.handle(any())).thenReturn(pagedResponse);
-    when(studentDtoMapper.toResponse(student)).thenReturn(expectedResponse);
+    PagedResponse<Student> expectedPagedResponse =
+        new PagedResponse<>(students, page, size, 2L, 1, false, false);
+
+    when(searchStudentsUseCase.handle(any())).thenReturn(expectedPagedResponse);
+    when(studentDtoMapper.toResponse(any(Student.class)))
+        .thenAnswer(
+            invocation -> {
+              Student student = invocation.getArgument(0);
+              return createTestStudentResponse(student.id(), student.name(), student.schoolId());
+            });
 
     // Act
     ResponseEntity<PagedResponse<StudentResponse>> response =
-        controller.searchStudents(schoolId, "", 0, 20);
-
-    // Assert
-    assertEquals(HttpStatus.OK, response.getStatusCode());
-    assertNotNull(response.getBody());
-    assertEquals(1, response.getBody().content().size());
-    assertFalse(response.getBody().hasNext());
-    assertFalse(response.getBody().hasPrevious());
-
-    verify(searchStudentsUseCase).handle(any());
-    verify(studentDtoMapper).toResponse(student);
-  }
-
-  @Test
-  void givenPagedResults_whenSearchStudents_thenReturnsCorrectPagingFlags() {
-    // Arrange
-    UUID schoolId = UUID.randomUUID();
-    UUID studentId1 = UUID.randomUUID();
-    UUID studentId2 = UUID.randomUUID();
-
-    Student student1 = new Student(studentId1, "Harry Potter", schoolId);
-    Student student2 = new Student(studentId2, "Hermione Granger", schoolId);
-
-    StudentResponse response1 = new StudentResponse(studentId1, "Harry Potter", schoolId);
-    StudentResponse response2 = new StudentResponse(studentId2, "Hermione Granger", schoolId);
-
-    // Simulate page 0 of 2 pages (hasNext = true, hasPrevious = false)
-    PagedResponse<Student> pagedResponse =
-        new PagedResponse<>(List.of(student1, student2), 0, 20, 40, 2, true, false);
-
-    when(searchStudentsUseCase.handle(any())).thenReturn(pagedResponse);
-    when(studentDtoMapper.toResponse(student1)).thenReturn(response1);
-    when(studentDtoMapper.toResponse(student2)).thenReturn(response2);
-
-    // Act
-    ResponseEntity<PagedResponse<StudentResponse>> response =
-        controller.searchStudents(schoolId, "Harry", 0, 20);
+        controller.listStudents(schoolId, query, page, size);
 
     // Assert
     assertEquals(HttpStatus.OK, response.getStatusCode());
     assertNotNull(response.getBody());
     assertEquals(2, response.getBody().content().size());
-    assertEquals(0, response.getBody().pageNumber());
-    assertEquals(20, response.getBody().pageSize());
-    assertEquals(40, response.getBody().totalElements());
-    assertEquals(2, response.getBody().totalPages());
+
+    verify(searchStudentsUseCase).handle(any());
+  }
+
+  @Test
+  void givenPagedResults_whenListStudents_thenReturnsCorrectPagingFlags() {
+    // Arrange
+    UUID schoolId = UUID.randomUUID();
+    String query = "";
+    int page = 1;
+    int size = 10;
+
+    List<Student> students =
+        List.of(
+            createTestStudent(UUID.randomUUID(), "Student 1", schoolId),
+            createTestStudent(UUID.randomUUID(), "Student 2", schoolId));
+
+    PagedResponse<Student> expectedPagedResponse =
+        new PagedResponse<>(students, page, size, 25L, 3, true, true);
+
+    when(searchStudentsUseCase.handle(any())).thenReturn(expectedPagedResponse);
+    when(studentDtoMapper.toResponse(any(Student.class)))
+        .thenAnswer(
+            invocation -> {
+              Student student = invocation.getArgument(0);
+              return createTestStudentResponse(student.id(), student.name(), student.schoolId());
+            });
+
+    // Act
+    ResponseEntity<PagedResponse<StudentResponse>> response =
+        controller.listStudents(schoolId, query, page, size);
+
+    // Assert
+    assertEquals(HttpStatus.OK, response.getStatusCode());
+    assertNotNull(response.getBody());
+    assertEquals(page, response.getBody().pageNumber());
+    assertEquals(size, response.getBody().pageSize());
+    assertEquals(25L, response.getBody().totalElements());
+    assertEquals(3, response.getBody().totalPages());
     assertTrue(response.getBody().hasNext());
-    assertFalse(response.getBody().hasPrevious());
+    assertTrue(response.getBody().hasPrevious());
 
     verify(searchStudentsUseCase).handle(any());
-    verify(studentDtoMapper, times(2)).toResponse(any());
   }
-
-  // Negative path tests
 
   @Test
   void givenNonExistentId_whenGetStudentById_thenThrowsNotFoundException() {
     // Arrange
-    UUID nonExistentId = UUID.randomUUID();
-    when(getStudentByIdUseCase.handle(any())).thenThrow(new NotFoundException("Student not found"));
+    UUID studentId = UUID.randomUUID();
+    UUID schoolId = UUID.randomUUID();
+
+    when(getStudentByIdUseCase.handle(any()))
+        .thenThrow(new NotFoundException("Student", studentId.toString()));
 
     // Act & Assert
-    assertThrows(
-        NotFoundException.class,
-        () -> {
-          controller.getStudentById(nonExistentId);
-        });
+    assertThrows(NotFoundException.class, () -> controller.getStudentById(schoolId, studentId));
 
     verify(getStudentByIdUseCase).handle(any());
     verify(studentDtoMapper, never()).toResponse(any());
   }
 
   @Test
-  void givenOverCapacity_whenCreateStudent_thenThrowsCapacityExceededException() {
+  void givenOverCapacity_whenEnrollStudent_thenThrowsCapacityExceededException() {
     // Arrange
     UUID schoolId = UUID.randomUUID();
-    StudentRequest request = new StudentRequest("Harry Potter", schoolId);
+    StudentRequest request = new StudentRequest("Harry Potter");
     CreateStudentCommand expectedCommand = new CreateStudentCommand("Harry Potter", schoolId);
 
-    when(studentDtoMapper.toCreateCommand(request)).thenReturn(expectedCommand);
+    when(studentDtoMapper.toCreateCommand(request, schoolId)).thenReturn(expectedCommand);
     when(createStudentUseCase.handle(expectedCommand))
         .thenThrow(new CapacityExceededException(schoolId));
 
     // Act & Assert
     assertThrows(
-        CapacityExceededException.class,
-        () -> {
-          controller.createStudent(request);
-        });
+        CapacityExceededException.class, () -> controller.enrollStudent(schoolId, request));
 
-    verify(studentDtoMapper).toCreateCommand(request);
+    verify(studentDtoMapper).toCreateCommand(request, schoolId);
     verify(createStudentUseCase).handle(expectedCommand);
     verify(getStudentByIdUseCase, never()).handle(any());
     verify(studentDtoMapper, never()).toResponse(any());
@@ -310,76 +332,73 @@ class StudentControllerTest {
   @Test
   void givenNonExistentId_whenUpdateStudent_thenThrowsNotFoundException() {
     // Arrange
-    UUID nonExistentId = UUID.randomUUID();
-    String newName = "Updated Student Name";
-    UpdateStudentCommand expectedCommand = new UpdateStudentCommand(nonExistentId, newName);
+    UUID studentId = UUID.randomUUID();
+    UUID schoolId = UUID.randomUUID();
+    String newName = "Updated Harry Potter";
+    UpdateStudentCommand expectedCommand = new UpdateStudentCommand(schoolId, studentId, newName);
 
-    when(studentDtoMapper.toUpdateCommand(nonExistentId, newName)).thenReturn(expectedCommand);
-    doThrow(new NotFoundException("Student not found"))
+    when(studentDtoMapper.toUpdateCommand(schoolId, studentId, newName))
+        .thenReturn(expectedCommand);
+    doThrow(new NotFoundException("Student", studentId.toString()))
         .when(updateStudentUseCase)
         .handle(expectedCommand);
 
     // Act & Assert
     assertThrows(
-        NotFoundException.class,
-        () -> {
-          controller.updateStudent(nonExistentId, newName);
-        });
+        NotFoundException.class, () -> controller.updateStudent(schoolId, studentId, newName));
 
-    verify(studentDtoMapper).toUpdateCommand(nonExistentId, newName);
+    verify(studentDtoMapper).toUpdateCommand(schoolId, studentId, newName);
     verify(updateStudentUseCase).handle(expectedCommand);
     verify(getStudentByIdUseCase, never()).handle(any());
     verify(studentDtoMapper, never()).toResponse(any());
   }
 
   @Test
-  void givenNonExistentId_whenDeleteStudent_thenThrowsNotFoundException() {
+  void givenNonExistentId_whenRemoveStudent_thenThrowsNotFoundException() {
     // Arrange
-    UUID nonExistentId = UUID.randomUUID();
-    doThrow(new NotFoundException("Student not found")).when(deleteStudentUseCase).handle(any());
+    UUID studentId = UUID.randomUUID();
+    UUID schoolId = UUID.randomUUID();
+
+    doThrow(new NotFoundException("Student", studentId.toString()))
+        .when(deleteStudentUseCase)
+        .handle(any());
 
     // Act & Assert
-    assertThrows(
-        NotFoundException.class,
-        () -> {
-          controller.deleteStudent(nonExistentId);
-        });
+    assertThrows(NotFoundException.class, () -> controller.removeStudent(schoolId, studentId));
 
     verify(deleteStudentUseCase).handle(any());
   }
 
   @Test
-  void givenNonExistentSchoolId_whenCreateStudent_thenThrowsNotFoundException() {
+  void givenNonExistentSchoolId_whenEnrollStudent_thenThrowsNotFoundException() {
     // Arrange
     UUID nonExistentSchoolId = UUID.randomUUID();
-    StudentRequest request = new StudentRequest("Harry Potter", nonExistentSchoolId);
+    StudentRequest request = new StudentRequest("Harry Potter");
     CreateStudentCommand expectedCommand =
         new CreateStudentCommand("Harry Potter", nonExistentSchoolId);
 
-    when(studentDtoMapper.toCreateCommand(request)).thenReturn(expectedCommand);
+    when(studentDtoMapper.toCreateCommand(request, nonExistentSchoolId))
+        .thenReturn(expectedCommand);
     when(createStudentUseCase.handle(expectedCommand))
-        .thenThrow(new NotFoundException("School not found"));
+        .thenThrow(new NotFoundException("School", nonExistentSchoolId.toString()));
 
     // Act & Assert
     assertThrows(
-        NotFoundException.class,
-        () -> {
-          controller.createStudent(request);
-        });
+        NotFoundException.class, () -> controller.enrollStudent(nonExistentSchoolId, request));
 
-    verify(studentDtoMapper).toCreateCommand(request);
+    verify(studentDtoMapper).toCreateCommand(request, nonExistentSchoolId);
     verify(createStudentUseCase).handle(expectedCommand);
     verify(getStudentByIdUseCase, never()).handle(any());
     verify(studentDtoMapper, never()).toResponse(any());
   }
 
-  // Helper methods for creating test data
+  // Helper methods
   private Student createTestStudent(UUID id, String name, UUID schoolId) {
     return new Student(id, name, schoolId);
   }
 
-  private StudentRequest createTestStudentRequest(String name, UUID schoolId) {
-    return new StudentRequest(name, schoolId);
+  private StudentRequest createTestStudentRequest(String name) {
+    return new StudentRequest(name);
   }
 
   private StudentResponse createTestStudentResponse(UUID id, String name, UUID schoolId) {

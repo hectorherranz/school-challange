@@ -3,8 +3,7 @@ package com.hectorherranz.schoolapi.application.handler;
 import com.hectorherranz.schoolapi.application.command.UpdateStudentCommand;
 import com.hectorherranz.schoolapi.application.port.in.UpdateStudentUseCase;
 import com.hectorherranz.schoolapi.domain.exception.NotFoundException;
-import com.hectorherranz.schoolapi.domain.model.Student;
-import com.hectorherranz.schoolapi.domain.repository.StudentRepositoryPort;
+import com.hectorherranz.schoolapi.domain.repository.SchoolRepositoryPort;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -12,24 +11,24 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public class UpdateStudentHandler implements UpdateStudentUseCase {
 
-  private final StudentRepositoryPort studentRepository;
+  private final SchoolRepositoryPort schoolRepository;
 
-  public UpdateStudentHandler(StudentRepositoryPort studentRepository) {
-    this.studentRepository = studentRepository;
+  public UpdateStudentHandler(SchoolRepositoryPort schoolRepository) {
+    this.schoolRepository = schoolRepository;
   }
 
   @Override
   public void handle(UpdateStudentCommand command) {
-    // Find the student
-    Student student =
-        studentRepository
-            .findById(command.studentId())
-            .orElseThrow(() -> new NotFoundException("Student", command.studentId().toString()));
+    // Find the school
+    var school =
+        schoolRepository
+            .findById(command.schoolId())
+            .orElseThrow(() -> new NotFoundException("School", command.schoolId().toString()));
 
-    // Create updated student with new name
-    Student updatedStudent = new Student(student.id(), command.name(), student.schoolId());
+    // Update student through the school aggregate
+    school.updateStudent(command.studentId(), command.name());
 
-    // Save the updated student
-    studentRepository.save(updatedStudent);
+    // Save the updated school
+    schoolRepository.save(school);
   }
 }

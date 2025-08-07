@@ -2,11 +2,14 @@ package com.hectorherranz.schoolapi.domain.model;
 
 import com.hectorherranz.schoolapi.domain.event.StudentEnrolledEvent;
 import com.hectorherranz.schoolapi.domain.exception.CapacityExceededException;
+import com.hectorherranz.schoolapi.domain.exception.NotFoundException;
 import com.hectorherranz.schoolapi.domain.model.draft.StudentDraft;
 import com.hectorherranz.schoolapi.domain.model.valueobject.Capacity;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 /** Aggregate root : School */
@@ -15,7 +18,7 @@ public class School extends AggregateRoot {
   private final UUID id;
   private String name;
   private Capacity capacity;
-  private final List<Student> students = new ArrayList<>();
+  private final Map<UUID, Student> studentsById = new HashMap<>();
 
   /* ---------- constructors ---------- */
 
@@ -29,21 +32,47 @@ public class School extends AggregateRoot {
   /** Constructor for JPA mapper rehydration */
   public static School rehydrate(UUID id, String name, Capacity capacity, List<Student> existing) {
     School school = new School(id, name, capacity);
-    school.students.addAll(existing);
+    for (Student student : existing) {
+      school.studentsById.put(student.id(), student);
+    }
     return school;
   }
 
   /* ---------- business operations ---------- */
 
   public Student enrollStudent(StudentDraft draft) {
-    if (!capacity.canEnroll(students.size())) throw new CapacityExceededException(id);
+    if (!capacity.canEnroll(studentsById.size())) throw new CapacityExceededException(id);
 
     UUID studentId = UUID.randomUUID();
     Student s = new Student(studentId, draft.name(), this.id);
-    students.add(s);
+    studentsById.put(studentId, s);
 
     registerEvent(new StudentEnrolledEvent(studentId, this.id));
     return s;
+  }
+
+  public void updateStudent(UUID studentId, String newName) {
+    Student student = studentsById.get(studentId);
+    if (student == null) {
+      throw new NotFoundException("Student", studentId.toString());
+    }
+
+    // Create updated student with new name
+    Student updatedStudent = new Student(studentId, newName, this.id);
+    studentsById.put(studentId, updatedStudent);
+  }
+
+  public void removeStudent(UUID studentId) {
+    Student student = studentsById.get(studentId);
+    if (student == null) {
+      throw new NotFoundException("Student", studentId.toString());
+    }
+
+    studentsById.remove(studentId);
+  }
+
+  public Student findStudentById(UUID studentId) {
+    return studentsById.get(studentId);
   }
 
   public void changeName(String newName) {
@@ -51,7 +80,7 @@ public class School extends AggregateRoot {
   }
 
   public void resizeCapacity(Capacity newCapacity) {
-    if (newCapacity.value() < students.size())
+    if (newCapacity.value() < studentsById.size())
       throw new IllegalArgumentException("New capacity cannot be less than current enrollment");
     this.capacity = newCapacity;
   }
@@ -71,10 +100,14 @@ public class School extends AggregateRoot {
   }
 
   public int enrolledCount() {
-    return students.size();
+    return studentsById.size();
   }
 
   public List<Student> students() {
-    return Collections.unmodifiableList(students);
+    return Collections.unmodifiableList(new ArrayList<>(studentsById.values()));
+  }
+
+  public Map<UUID, Student> studentsById() {
+    return Collections.unmodifiableMap(new HashMap<>(studentsById));
   }
 }

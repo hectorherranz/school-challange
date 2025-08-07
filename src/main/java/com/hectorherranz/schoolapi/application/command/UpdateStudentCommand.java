@@ -4,4 +4,5 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import java.util.UUID;
 
-public record UpdateStudentCommand(@NotNull UUID studentId, @NotBlank String name) {}
+public record UpdateStudentCommand(
+    @NotNull UUID schoolId, @NotNull UUID studentId, @NotBlank String name) {}

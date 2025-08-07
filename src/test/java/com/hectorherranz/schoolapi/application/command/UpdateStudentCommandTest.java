@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Test;
 class UpdateStudentCommandTest {
 
   private static Validator VALIDATOR;
+  private static final UUID VALID_SCHOOL_ID = UUID.randomUUID();
   private static final UUID VALID_STUDENT_ID = UUID.randomUUID();
 
   @BeforeAll
@@ -22,15 +23,29 @@ class UpdateStudentCommandTest {
 
   @Test
   void validCommand_passes() {
-    UpdateStudentCommand command = new UpdateStudentCommand(VALID_STUDENT_ID, "Hermione Granger");
+    UpdateStudentCommand command =
+        new UpdateStudentCommand(VALID_SCHOOL_ID, VALID_STUDENT_ID, "Hermione Granger");
     Set<ConstraintViolation<UpdateStudentCommand>> violations = VALIDATOR.validate(command);
 
     assertEquals(0, violations.size());
   }
 
   @Test
+  void nullSchoolId_fails() {
+    UpdateStudentCommand command =
+        new UpdateStudentCommand(null, VALID_STUDENT_ID, "Hermione Granger");
+    Set<ConstraintViolation<UpdateStudentCommand>> violations = VALIDATOR.validate(command);
+
+    assertEquals(1, violations.size());
+    ConstraintViolation<UpdateStudentCommand> violation = violations.iterator().next();
+    assertEquals("must not be null", violation.getMessage());
+    assertEquals("schoolId", violation.getPropertyPath().toString());
+  }
+
+  @Test
   void nullStudentId_fails() {
-    UpdateStudentCommand command = new UpdateStudentCommand(null, "Hermione Granger");
+    UpdateStudentCommand command =
+        new UpdateStudentCommand(VALID_SCHOOL_ID, null, "Hermione Granger");
     Set<ConstraintViolation<UpdateStudentCommand>> violations = VALIDATOR.validate(command);
 
     assertEquals(1, violations.size());
@@ -41,7 +56,7 @@ class UpdateStudentCommandTest {
 
   @Test
   void blankName_fails() {
-    UpdateStudentCommand command = new UpdateStudentCommand(VALID_STUDENT_ID, " ");
+    UpdateStudentCommand command = new UpdateStudentCommand(VALID_SCHOOL_ID, VALID_STUDENT_ID, " ");
     Set<ConstraintViolation<UpdateStudentCommand>> violations = VALIDATOR.validate(command);
 
     assertEquals(1, violations.size());
@@ -51,11 +66,14 @@ class UpdateStudentCommandTest {
   }
 
   @Test
-  void bothInvalidFields_fails() {
-    UpdateStudentCommand command = new UpdateStudentCommand(null, " ");
+  void multipleInvalidFields_fails() {
+    UpdateStudentCommand command = new UpdateStudentCommand(null, null, " ");
     Set<ConstraintViolation<UpdateStudentCommand>> violations = VALIDATOR.validate(command);
 
-    assertEquals(2, violations.size());
+    assertEquals(3, violations.size());
+    boolean hasSchoolIdViolation =
+        violations.stream()
+            .anyMatch(violation -> "schoolId".equals(violation.getPropertyPath().toString()));
     boolean hasStudentIdViolation =
         violations.stream()
             .anyMatch(violation -> "studentId".equals(violation.getPropertyPath().toString()));
@@ -63,6 +81,7 @@ class UpdateStudentCommandTest {
         violations.stream()
             .anyMatch(violation -> "name".equals(violation.getPropertyPath().toString()));
 
+    assertTrue(hasSchoolIdViolation);
     assertTrue(hasStudentIdViolation);
     assertTrue(hasNameViolation);
   }

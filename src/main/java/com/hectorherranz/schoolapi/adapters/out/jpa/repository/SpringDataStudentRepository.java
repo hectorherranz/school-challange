@@ -8,7 +8,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-interface SpringDataStudentRepository extends JpaRepository<StudentEntity, UUID> {
+public interface SpringDataStudentRepository extends JpaRepository<StudentEntity, UUID> {
 
   Page<StudentEntity> findBySchoolIdAndNameContainingIgnoreCase(
       UUID schoolId, String name, Pageable pageable);

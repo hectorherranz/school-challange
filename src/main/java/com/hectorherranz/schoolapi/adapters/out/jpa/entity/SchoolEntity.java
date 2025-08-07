@@ -5,8 +5,12 @@ import com.hectorherranz.schoolapi.domain.model.valueobject.Capacity;
 import jakarta.persistence.*;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import org.hibernate.annotations.LazyCollection;
+import org.hibernate.annotations.LazyCollectionOption;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -27,8 +31,14 @@ public class SchoolEntity {
   @Convert(converter = CapacityConverter.class)
   private Capacity capacity;
 
-  @OneToMany(mappedBy = "school", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-  private List<StudentEntity> students = new ArrayList<>();
+  @OneToMany(
+      mappedBy = "school",
+      cascade = CascadeType.ALL,
+      orphanRemoval = true,
+      fetch = FetchType.LAZY)
+  @MapKey(name = "id")
+  @LazyCollection(LazyCollectionOption.EXTRA)
+  private Map<UUID, StudentEntity> studentsById = new HashMap<>();
 
   @CreatedDate
   @Column(name = "created_at", nullable = false, updatable = false)
@@ -64,8 +74,12 @@ public class SchoolEntity {
     return capacity;
   }
 
+  public Map<UUID, StudentEntity> getStudentsById() {
+    return new HashMap<>(studentsById);
+  }
+
   public List<StudentEntity> getStudents() {
-    return new ArrayList<>(students);
+    return new ArrayList<>(studentsById.values());
   }
 
   public Instant getCreatedAt() {
@@ -93,8 +107,15 @@ public class SchoolEntity {
     this.capacity = capacity;
   }
 
+  public void setStudentsById(Map<UUID, StudentEntity> studentsById) {
+    this.studentsById = studentsById;
+  }
+
   public void setStudents(List<StudentEntity> students) {
-    this.students = students;
+    this.studentsById.clear();
+    for (StudentEntity student : students) {
+      this.studentsById.put(student.getId(), student);
+    }
   }
 
   public void setCreatedAt(Instant createdAt) {

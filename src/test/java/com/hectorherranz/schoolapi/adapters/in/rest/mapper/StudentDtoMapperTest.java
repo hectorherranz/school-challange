@@ -14,55 +14,85 @@ import org.junit.jupiter.api.Test;
 class StudentDtoMapperTest {
 
   private StudentDtoMapper mapper;
+  private UUID studentId;
+  private UUID schoolId;
+  private String name;
 
   @BeforeEach
   void setUp() {
     mapper = new StudentDtoMapper();
+    studentId = UUID.randomUUID();
+    schoolId = UUID.randomUUID();
+    name = "Harry Potter";
   }
 
   @Test
-  void toCreateCommand_ValidRequest_ReturnsCorrectCommand() {
-    // Arrange
-    String name = "Harry Potter";
-    UUID schoolId = UUID.randomUUID();
-    StudentRequest request = new StudentRequest(name, schoolId);
+  void shouldMapToCreateCommand() {
+    // Given
+    StudentRequest request = new StudentRequest(name);
 
-    // Act
-    CreateStudentCommand command = mapper.toCreateCommand(request);
+    // When
+    CreateStudentCommand command = mapper.toCreateCommand(request, schoolId);
 
-    // Assert
+    // Then
+    assertNotNull(command);
     assertEquals(name, command.name());
     assertEquals(schoolId, command.schoolId());
   }
 
   @Test
-  void toUpdateCommand_ValidParameters_ReturnsCorrectCommand() {
-    // Arrange
-    UUID studentId = UUID.randomUUID();
-    String newName = "Updated Student Name";
+  void shouldMapToUpdateCommand() {
+    // Given
+    String newName = "Updated Harry Potter";
 
-    // Act
-    UpdateStudentCommand command = mapper.toUpdateCommand(studentId, newName);
+    // When
+    UpdateStudentCommand command = mapper.toUpdateCommand(schoolId, studentId, newName);
 
-    // Assert
+    // Then
+    assertNotNull(command);
+    assertEquals(schoolId, command.schoolId());
     assertEquals(studentId, command.studentId());
     assertEquals(newName, command.name());
   }
 
   @Test
-  void toResponse_ValidStudent_ReturnsCorrectResponse() {
-    // Arrange
-    UUID studentId = UUID.randomUUID();
-    String name = "Harry Potter";
-    UUID schoolId = UUID.randomUUID();
+  void shouldMapToResponse() {
+    // Given
     Student student = new Student(studentId, name, schoolId);
 
-    // Act
+    // When
     StudentResponse response = mapper.toResponse(student);
 
-    // Assert
+    // Then
+    assertNotNull(response);
     assertEquals(studentId, response.id());
     assertEquals(name, response.name());
     assertEquals(schoolId, response.schoolId());
+  }
+
+  @Test
+  void shouldHandleNullValues() {
+    // Given
+    Student nullStudent = null;
+
+    // When & Then
+    assertThrows(NullPointerException.class, () -> mapper.toResponse(nullStudent));
+  }
+
+  @Test
+  void shouldPreserveAllFieldsInMapping() {
+    // Given
+    UUID customStudentId = UUID.randomUUID();
+    UUID customSchoolId = UUID.randomUUID();
+    String customName = "Hermione Granger";
+    Student student = new Student(customStudentId, customName, customSchoolId);
+
+    // When
+    StudentResponse response = mapper.toResponse(student);
+
+    // Then
+    assertEquals(customStudentId, response.id());
+    assertEquals(customName, response.name());
+    assertEquals(customSchoolId, response.schoolId());
   }
 }

@@ -8,7 +8,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-interface SpringDataSchoolRepository extends JpaRepository<SchoolEntity, UUID> {
+public interface SpringDataSchoolRepository extends JpaRepository<SchoolEntity, UUID> {
 
   boolean existsByNameIgnoreCase(String name);
 

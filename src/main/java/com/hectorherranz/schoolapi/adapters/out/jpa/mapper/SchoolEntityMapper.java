@@ -7,6 +7,7 @@ import com.hectorherranz.schoolapi.domain.model.Student;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 public final class SchoolEntityMapper {
@@ -32,13 +33,13 @@ public final class SchoolEntityMapper {
     SchoolEntity entity = new SchoolEntity(s.name(), s.capacity());
     entity.setId(s.id()); // preserve domain-generated UUID
 
-    List<StudentEntity> studentEntities =
+    Map<StudentEntity, SchoolEntity> studentEntities =
         s.students().stream()
             .map(StudentEntityMapper::toEntity)
-            .collect(Collectors.toCollection(ArrayList::new));
+            .collect(Collectors.toMap(studentEntity -> studentEntity, studentEntity -> entity));
 
-    studentEntities.forEach(stu -> stu.setSchool(entity));
-    entity.setStudents(studentEntities);
+    studentEntities.keySet().forEach(stu -> stu.setSchool(entity));
+    entity.setStudents(new ArrayList<>(studentEntities.keySet()));
 
     return entity;
   }

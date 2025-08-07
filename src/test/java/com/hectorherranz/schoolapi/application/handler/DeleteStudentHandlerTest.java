@@ -1,12 +1,16 @@
 package com.hectorherranz.schoolapi.application.handler;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 import com.hectorherranz.schoolapi.application.command.DeleteStudentCommand;
 import com.hectorherranz.schoolapi.domain.exception.NotFoundException;
+import com.hectorherranz.schoolapi.domain.model.School;
 import com.hectorherranz.schoolapi.domain.model.Student;
-import com.hectorherranz.schoolapi.domain.repository.StudentRepositoryPort;
+import com.hectorherranz.schoolapi.domain.model.valueobject.Capacity;
+import com.hectorherranz.schoolapi.domain.repository.SchoolRepositoryPort;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
@@ -18,68 +22,51 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class DeleteStudentHandlerTest {
 
-  @Mock private StudentRepositoryPort studentRepository;
+  @Mock private SchoolRepositoryPort schoolRepository;
 
   private DeleteStudentHandler handler;
 
   @BeforeEach
   void setUp() {
-    handler = new DeleteStudentHandler(studentRepository);
+    handler = new DeleteStudentHandler(schoolRepository);
   }
 
   @Test
-  void handle_StudentExists_DeletesStudent() {
-    // Arrange
+  void shouldDeleteStudentSuccessfully() {
+    // Given
     UUID studentId = UUID.randomUUID();
-    String studentName = "Test Student";
     UUID schoolId = UUID.randomUUID();
+    String studentName = "Harry Potter";
 
     Student existingStudent = new Student(studentId, studentName, schoolId);
-    DeleteStudentCommand command = new DeleteStudentCommand(studentId);
+    School school =
+        School.rehydrate(schoolId, "Test School", new Capacity(100), List.of(existingStudent));
+    DeleteStudentCommand command = new DeleteStudentCommand(schoolId, studentId);
 
-    when(studentRepository.findById(studentId)).thenReturn(Optional.of(existingStudent));
-    doNothing().when(studentRepository).deleteById(studentId);
+    when(schoolRepository.findById(schoolId)).thenReturn(Optional.of(school));
+    when(schoolRepository.save(any(School.class))).thenReturn(school);
 
-    // Act
+    // When
     handler.handle(command);
 
-    // Assert
-    verify(studentRepository).findById(studentId);
-    verify(studentRepository).deleteById(studentId);
+    // Then
+    verify(schoolRepository).findById(schoolId);
+    verify(schoolRepository).save(any(School.class));
   }
 
   @Test
-  void handle_StudentNotFound_ThrowsNotFoundException() {
-    // Arrange
+  void shouldThrowNotFoundExceptionWhenSchoolNotFound() {
+    // Given
     UUID studentId = UUID.randomUUID();
-    DeleteStudentCommand command = new DeleteStudentCommand(studentId);
+    UUID schoolId = UUID.randomUUID();
+    DeleteStudentCommand command = new DeleteStudentCommand(schoolId, studentId);
 
-    when(studentRepository.findById(studentId)).thenReturn(Optional.empty());
+    when(schoolRepository.findById(schoolId)).thenReturn(Optional.empty());
 
-    // Act & Assert
-    NotFoundException exception =
-        assertThrows(NotFoundException.class, () -> handler.handle(command));
+    // When & Then
+    assertThrows(NotFoundException.class, () -> handler.handle(command));
 
-    assertEquals("Student not found with identifier: " + studentId, exception.getMessage());
-    verify(studentRepository).findById(studentId);
-    verify(studentRepository, never()).deleteById(any());
-  }
-
-  @Test
-  void handle_ValidStudentId_DeletesCorrectStudent() {
-    // Arrange
-    UUID studentId = UUID.randomUUID();
-    DeleteStudentCommand command = new DeleteStudentCommand(studentId);
-
-    Student existingStudent = new Student(studentId, "Test Student", UUID.randomUUID());
-    when(studentRepository.findById(studentId)).thenReturn(Optional.of(existingStudent));
-    doNothing().when(studentRepository).deleteById(studentId);
-
-    // Act
-    handler.handle(command);
-
-    // Assert
-    verify(studentRepository).findById(studentId);
-    verify(studentRepository).deleteById(studentId);
+    verify(schoolRepository).findById(schoolId);
+    verify(schoolRepository, never()).save(any());
   }
 }

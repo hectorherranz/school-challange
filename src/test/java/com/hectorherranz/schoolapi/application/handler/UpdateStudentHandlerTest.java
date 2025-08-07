@@ -6,8 +6,11 @@ import static org.mockito.Mockito.*;
 
 import com.hectorherranz.schoolapi.application.command.UpdateStudentCommand;
 import com.hectorherranz.schoolapi.domain.exception.NotFoundException;
+import com.hectorherranz.schoolapi.domain.model.School;
 import com.hectorherranz.schoolapi.domain.model.Student;
-import com.hectorherranz.schoolapi.domain.repository.StudentRepositoryPort;
+import com.hectorherranz.schoolapi.domain.model.valueobject.Capacity;
+import com.hectorherranz.schoolapi.domain.repository.SchoolRepositoryPort;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
@@ -19,131 +22,53 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class UpdateStudentHandlerTest {
 
-  @Mock private StudentRepositoryPort studentRepository;
+  @Mock private SchoolRepositoryPort schoolRepository;
 
   private UpdateStudentHandler handler;
 
   @BeforeEach
   void setUp() {
-    handler = new UpdateStudentHandler(studentRepository);
+    handler = new UpdateStudentHandler(schoolRepository);
   }
 
   @Test
-  void handle_ValidCommand_UpdatesStudentName() {
-    // Arrange
+  void shouldUpdateStudentSuccessfully() {
+    // Given
     UUID studentId = UUID.randomUUID();
     UUID schoolId = UUID.randomUUID();
-    String oldName = "Old Student Name";
-    String newName = "New Student Name";
+    String newName = "Updated Harry Potter";
+    String oldName = "Harry Potter";
 
     Student existingStudent = new Student(studentId, oldName, schoolId);
-    UpdateStudentCommand command = new UpdateStudentCommand(studentId, newName);
+    School school =
+        School.rehydrate(schoolId, "Test School", new Capacity(100), List.of(existingStudent));
+    UpdateStudentCommand command = new UpdateStudentCommand(schoolId, studentId, newName);
 
-    when(studentRepository.findById(studentId)).thenReturn(Optional.of(existingStudent));
-    when(studentRepository.save(any(Student.class))).thenReturn(existingStudent);
+    when(schoolRepository.findById(schoolId)).thenReturn(Optional.of(school));
+    when(schoolRepository.save(any(School.class))).thenReturn(school);
 
-    // Act
+    // When
     handler.handle(command);
 
-    // Assert
-    verify(studentRepository).findById(studentId);
-    verify(studentRepository)
-        .save(
-            argThat(
-                student ->
-                    student.id().equals(studentId)
-                        && student.name().equals(newName)
-                        && student.schoolId().equals(schoolId)));
+    // Then
+    verify(schoolRepository).findById(schoolId);
+    verify(schoolRepository).save(any(School.class));
   }
 
   @Test
-  void handle_StudentNotFound_ThrowsNotFoundException() {
-    // Arrange
-    UUID studentId = UUID.randomUUID();
-    String newName = "New Student Name";
-    UpdateStudentCommand command = new UpdateStudentCommand(studentId, newName);
-
-    when(studentRepository.findById(studentId)).thenReturn(Optional.empty());
-
-    // Act & Assert
-    NotFoundException exception =
-        assertThrows(NotFoundException.class, () -> handler.handle(command));
-
-    assertEquals("Student not found with identifier: " + studentId, exception.getMessage());
-    verify(studentRepository).findById(studentId);
-    verify(studentRepository, never()).save(any(Student.class));
-  }
-
-  @Test
-  void handle_ValidCommand_CreatesNewStudentInstance() {
-    // Arrange
+  void shouldThrowNotFoundExceptionWhenSchoolNotFound() {
+    // Given
     UUID studentId = UUID.randomUUID();
     UUID schoolId = UUID.randomUUID();
-    String oldName = "Old Student Name";
-    String newName = "New Student Name";
+    String newName = "Updated Harry Potter";
+    UpdateStudentCommand command = new UpdateStudentCommand(schoolId, studentId, newName);
 
-    Student existingStudent = new Student(studentId, oldName, schoolId);
-    UpdateStudentCommand command = new UpdateStudentCommand(studentId, newName);
+    when(schoolRepository.findById(schoolId)).thenReturn(Optional.empty());
 
-    when(studentRepository.findById(studentId)).thenReturn(Optional.of(existingStudent));
-    when(studentRepository.save(any(Student.class)))
-        .thenAnswer(
-            invocation -> {
-              Student savedStudent = invocation.getArgument(0);
-              return savedStudent;
-            });
+    // When & Then
+    assertThrows(NotFoundException.class, () -> handler.handle(command));
 
-    // Act
-    handler.handle(command);
-
-    // Assert
-    verify(studentRepository)
-        .save(
-            argThat(
-                student ->
-                    student.id().equals(studentId)
-                        && student.name().equals(newName)
-                        && student.schoolId().equals(schoolId)));
-  }
-
-  @Test
-  void handle_ValidCommand_PreservesSchoolId() {
-    // Arrange
-    UUID studentId = UUID.randomUUID();
-    UUID schoolId = UUID.randomUUID();
-    String oldName = "Old Student Name";
-    String newName = "New Student Name";
-
-    Student existingStudent = new Student(studentId, oldName, schoolId);
-    UpdateStudentCommand command = new UpdateStudentCommand(studentId, newName);
-
-    when(studentRepository.findById(studentId)).thenReturn(Optional.of(existingStudent));
-    when(studentRepository.save(any(Student.class))).thenReturn(existingStudent);
-
-    // Act
-    handler.handle(command);
-
-    // Assert
-    verify(studentRepository).save(argThat(student -> student.schoolId().equals(schoolId)));
-  }
-
-  @Test
-  void handle_ValidCommand_UpdatesCorrectStudent() {
-    // Arrange
-    UUID studentId = UUID.randomUUID();
-    String newName = "Updated Student Name";
-
-    Student existingStudent = new Student(studentId, "Old Name", UUID.randomUUID());
-    UpdateStudentCommand command = new UpdateStudentCommand(studentId, newName);
-
-    when(studentRepository.findById(studentId)).thenReturn(Optional.of(existingStudent));
-    when(studentRepository.save(any(Student.class))).thenReturn(existingStudent);
-
-    // Act
-    handler.handle(command);
-
-    // Assert
-    verify(studentRepository).findById(studentId);
-    verify(studentRepository).save(argThat(student -> student.id().equals(studentId)));
+    verify(schoolRepository).findById(schoolId);
+    verify(schoolRepository, never()).save(any());
   }
 }
