@@ -6,5 +6,5 @@ import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 @Configuration
 @EnableJpaAuditing
 public class HexagonSpringConfig {
-    // TODO: bean wiring for ports ↔ adapters
+  // TODO: bean wiring for ports ↔ adapters
 }

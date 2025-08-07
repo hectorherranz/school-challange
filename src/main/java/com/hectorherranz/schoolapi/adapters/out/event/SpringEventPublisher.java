@@ -5,5 +5,8 @@ import com.hectorherranz.schoolapi.domain.event.DomainEvent;
 import java.util.List;
 
 public class SpringEventPublisher implements DomainEventPublisher {
-    @Override public void publish(List<DomainEvent> events) { /* TODO */ }
+  @Override
+  public void publish(List<DomainEvent> events) {
+    /* TODO */
+  }
 }
