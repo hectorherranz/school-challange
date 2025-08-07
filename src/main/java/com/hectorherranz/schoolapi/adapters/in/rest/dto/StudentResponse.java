@@ -1,3 +1,9 @@
 package com.hectorherranz.schoolapi.adapters.in.rest.dto;
 
-public record StudentResponse() {}
+import java.util.UUID;
+
+public record StudentResponse(
+    UUID id,
+    String name,
+    UUID schoolId
+) {}

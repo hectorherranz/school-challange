@@ -1,3 +1,10 @@
 package com.hectorherranz.schoolapi.adapters.in.rest.dto;
 
-public record SchoolDetail() {}
+import java.util.UUID;
+
+public record SchoolDetail(
+    UUID id,
+    String name,
+    int capacity,
+    int enrolledStudents
+) {}
