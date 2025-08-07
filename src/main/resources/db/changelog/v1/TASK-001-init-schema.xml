@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <!-- 
+    TASK-001: Initial schema creation with optimized indexes for search requirements:
+    - Search schools by school name (name ILIKE)
+    - Show a school detail page, with enlisted students  
+    - Search a school students by students name (exact match on school id, student name ILIKE)
+    -->
+    <changeSet id="TASK-001-init-schema" author="hectorherranz">
+        <createTable tableName="schools">
+            <column name="id" type="uuid">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="capacity" type="integer">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="timestamp" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="timestamp" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createTable tableName="students">
+            <column name="id" type="uuid">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="email" type="varchar(255)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="school_id" type="uuid">
+                <constraints nullable="false" foreignKeyName="fk_students_school" references="schools(id)"/>
+            </column>
+            <column name="created_at" type="timestamp" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="timestamp" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <!-- Index for foreign key relationship -->
+        <createIndex tableName="students" indexName="idx_students_school_id">
+            <column name="school_id"/>
+        </createIndex>
+
+        <!-- Index for searching schools by name (ILIKE) -->
+        <createIndex tableName="schools" indexName="idx_schools_name">
+            <column name="name"/>
+        </createIndex>
+
+        <!-- Index for searching students by name within a school (ILIKE) -->
+        <createIndex tableName="students" indexName="idx_students_school_id_name">
+            <column name="school_id"/>
+            <column name="name"/>
+        </createIndex>
+
+        <!-- Index for email uniqueness and lookups -->
+        <createIndex tableName="students" indexName="idx_students_email">
+            <column name="email"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

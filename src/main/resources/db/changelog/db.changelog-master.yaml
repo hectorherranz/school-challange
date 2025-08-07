@@ -1,3 +1,8 @@
 databaseChangeLog:
-  # Root changelog for school-api database migrations
-  # Include other changelog files here as needed
+  # Version 1
+  - include:
+      file: db/changelog/v1/db.changelog-v1.yaml
+
+  # Future versions – keep chronological order
+  # - include: { file: db/changelog/v2/db.changelog-v2.yaml }
+  # - include: { file: db/changelog/v3/db.changelog-v3.yaml }
