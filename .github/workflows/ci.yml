@@ -6,12 +6,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '21'
+
       - name: Gradle cache
         uses: gradle/actions/setup-gradle@v3
+
+      # 🔧 give gradlew its executable bit
+      - name: Make gradlew executable
+        run: chmod +x ./gradlew
+
       - name: Build, test, Spotless & SpotBugs
-        run: |
-          ./gradlew spotlessCheck spotbugsMain build
+        run: ./gradlew spotlessCheck spotbugsMain build
