@@ -20,11 +20,18 @@ public class School extends AggregateRoot {
 
     /* ---------- constructors ---------- */
 
-    /** New school factory */
+    /** Public constructor for NEW schools */
     public School(UUID id, String name, Capacity capacity) {
         this.id       = id;
         this.name     = name.trim();
         this.capacity = capacity;
+    }
+
+    /** Constructor for JPA mapper rehydration */
+    public static School rehydrate(UUID id, String name, Capacity capacity, List<Student> existing) {
+        School school = new School(id, name, capacity);
+        school.students.addAll(existing);
+        return school;
     }
 
     /* ---------- business operations ---------- */

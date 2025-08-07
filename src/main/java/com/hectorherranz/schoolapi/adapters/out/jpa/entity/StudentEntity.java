@@ -1,8 +1,6 @@
 package com.hectorherranz.schoolapi.adapters.out.jpa.entity;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -15,11 +13,9 @@ import java.util.UUID;
 public class StudentEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(columnDefinition = "uuid")
     private UUID id;
 
-    @NotBlank(message = "Student name is required")
-    @Size(max = 100, message = "Student name must not exceed 100 characters")
     @Column(name = "name", nullable = false, length = 100)
     private String name;
 
@@ -50,6 +46,13 @@ public class StudentEntity {
         this.school = school;
     }
 
+    // Constructor for mapper
+    public StudentEntity(UUID id, String name, SchoolEntity school) {
+        this.id = id;
+        this.name = name;
+        this.school = school;
+    }
+
     // Getters
     public UUID getId() { return id; }
     public String getName() { return name; }
@@ -65,4 +68,6 @@ public class StudentEntity {
     public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
     public void setUpdatedAt(Instant updatedAt) { this.updatedAt = updatedAt; }
     public void setVersion(Long version) { this.version = version; }
+
+
 }

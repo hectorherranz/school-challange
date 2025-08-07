@@ -1,14 +1,11 @@
 package com.hectorherranz.schoolapi.adapters.out.jpa.entity;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
-import jakarta.validation.constraints.Size;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
+import com.hectorherranz.schoolapi.adapters.out.jpa.converter.CapacityConverter;
 import com.hectorherranz.schoolapi.domain.model.valueobject.Capacity;
 
 import java.time.Instant;
@@ -22,17 +19,14 @@ import java.util.UUID;
 public class SchoolEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(name = "id", columnDefinition = "uuid")
     private UUID id;
 
-    @NotBlank(message = "School name is required")
-    @Size(max = 100, message = "School name must not exceed 100 characters")
-    @Column(name = "name", nullable = false, length = 100, unique = true)
+    @Column(name = "name", nullable = false, length = 100)
     private String name;
 
-    @NotNull(message = "School capacity is required")
-    @Positive(message = "School capacity must be positive")
     @Column(name = "capacity", nullable = false)
+    @Convert(converter = CapacityConverter.class)
     private Capacity capacity;
 
     @OneToMany(mappedBy = "school", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
@@ -76,4 +70,9 @@ public class SchoolEntity {
     public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
     public void setUpdatedAt(Instant updatedAt) { this.updatedAt = updatedAt; }
     public void setVersion(Long version) { this.version = version; }
+
+    @PrePersist
+    void ensureId() {
+        if (id == null) id = UUID.randomUUID();
+    }
 }

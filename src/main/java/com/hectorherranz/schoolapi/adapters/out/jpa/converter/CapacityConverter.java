@@ -6,6 +6,14 @@ import jakarta.persistence.Converter;
 
 @Converter(autoApply = true)
 public class CapacityConverter implements AttributeConverter<Capacity, Integer> {
-    @Override public Integer convertToDatabaseColumn(Capacity attr) { return attr == null ? null : attr.value(); }
-    @Override public Capacity convertToEntityAttribute(Integer db)   { return db == null ? null : new Capacity(db); }
+
+    @Override
+    public Integer convertToDatabaseColumn(Capacity capacity) {
+        return capacity != null ? capacity.value() : null;
+    }
+
+    @Override
+    public Capacity convertToEntityAttribute(Integer dbData) {
+        return dbData != null ? new Capacity(dbData) : null;
+    }
 }

@@ -37,9 +37,6 @@
             <column name="name" type="varchar(255)">
                 <constraints nullable="false"/>
             </column>
-            <column name="email" type="varchar(255)">
-                <constraints nullable="false" unique="true"/>
-            </column>
             <column name="school_id" type="uuid">
                 <constraints nullable="false" foreignKeyName="fk_students_school" references="schools(id)"/>
             </column>
@@ -67,10 +64,7 @@
             <column name="name"/>
         </createIndex>
 
-        <!-- Index for email uniqueness and lookups -->
-        <createIndex tableName="students" indexName="idx_students_email">
-            <column name="email"/>
-        </createIndex>
+
     </changeSet>
 
 </databaseChangeLog>

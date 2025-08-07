@@ -8,6 +8,10 @@ public class Student {
     private final java.util.UUID schoolId;
 
     public Student(java.util.UUID id, String name, java.util.UUID schoolId) {
+        if (id == null) throw new NullPointerException("Student ID cannot be null");
+        if (name == null) throw new NullPointerException("Student name cannot be null");
+        if (schoolId == null) throw new NullPointerException("School ID cannot be null");
+        
         this.id       = id;
         this.name     = name.trim();
         this.schoolId = schoolId;
