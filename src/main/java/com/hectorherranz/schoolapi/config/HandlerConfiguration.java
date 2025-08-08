@@ -1,7 +1,10 @@
 package com.hectorherranz.schoolapi.config;
 
+import com.hectorherranz.schoolapi.adapters.out.jpa.service.SchoolInfrastructureService;
 import com.hectorherranz.schoolapi.adapters.out.jpa.service.StudentInfrastructureService;
+import com.hectorherranz.schoolapi.application.handler.UpdateSchoolHandlerOptimized;
 import com.hectorherranz.schoolapi.application.handler.UpdateStudentHandlerOptimized;
+import com.hectorherranz.schoolapi.application.port.in.UpdateSchoolUseCase;
 import com.hectorherranz.schoolapi.application.port.in.UpdateStudentUseCase;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -21,5 +24,15 @@ public class HandlerConfiguration {
   public UpdateStudentUseCase updateStudentUseCase(
       StudentInfrastructureService infrastructureService) {
     return new UpdateStudentHandlerOptimized(infrastructureService);
+  }
+
+  /**
+   * Hybrid handler - Uses optimized approach for maximum performance. Leverages Hibernate
+   * optimizations while maintaining clean architecture.
+   */
+  @Bean
+  public UpdateSchoolUseCase updateSchoolUseCase(
+      SchoolInfrastructureService infrastructureService) {
+    return new UpdateSchoolHandlerOptimized(infrastructureService);
   }
 }
