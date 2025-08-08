@@ -110,21 +110,16 @@ class SchoolStudentControllerTest {
   }
 
   @Test
-  void givenStudentFromDifferentSchool_whenGetStudentById_thenReturns404() {
+  void givenStudentFromDifferentSchool_whenGetStudentById_thenThrowsNotFoundException() {
     // Arrange
     UUID studentId = UUID.randomUUID();
     UUID schoolId = UUID.randomUUID();
-    UUID differentSchoolId = UUID.randomUUID();
-    Student student = new Student(studentId, "Harry Potter", differentSchoolId);
 
-    when(getStudentByIdUseCase.handle(any())).thenReturn(student);
+    when(getStudentByIdUseCase.handle(any()))
+        .thenThrow(new NotFoundException("Student", "Student not found in school"));
 
-    // Act
-    ResponseEntity<StudentResponse> response = controller.getStudentById(schoolId, studentId);
-
-    // Assert
-    assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-    assertNull(response.getBody());
+    // Act & Assert
+    assertThrows(NotFoundException.class, () -> controller.getStudentById(schoolId, studentId));
 
     verify(getStudentByIdUseCase).handle(any());
     verify(studentDtoMapper, never()).toResponse(any());
@@ -135,28 +130,30 @@ class SchoolStudentControllerTest {
     // Arrange
     UUID studentId = UUID.randomUUID();
     UUID schoolId = UUID.randomUUID();
-    String newName = "Updated Harry Potter";
-    UpdateStudentCommand expectedCommand = new UpdateStudentCommand(schoolId, studentId, newName);
-    Student student = new Student(studentId, newName, schoolId);
-    StudentResponse expectedResponse = new StudentResponse(studentId, newName, schoolId);
+    StudentRequest request = new StudentRequest("Updated Harry Potter");
+    UpdateStudentCommand expectedCommand =
+        new UpdateStudentCommand(schoolId, studentId, "Updated Harry Potter");
+    Student student = new Student(studentId, "Updated Harry Potter", schoolId);
+    StudentResponse expectedResponse =
+        new StudentResponse(studentId, "Updated Harry Potter", schoolId);
 
-    when(studentDtoMapper.toUpdateCommand(schoolId, studentId, newName))
+    when(studentDtoMapper.toUpdateCommand(request, schoolId, studentId))
         .thenReturn(expectedCommand);
     when(getStudentByIdUseCase.handle(any())).thenReturn(student);
     when(studentDtoMapper.toResponse(student)).thenReturn(expectedResponse);
 
     // Act
     ResponseEntity<StudentResponse> response =
-        controller.updateStudent(schoolId, studentId, newName);
+        controller.updateStudent(schoolId, studentId, request);
 
     // Assert
     assertEquals(HttpStatus.OK, response.getStatusCode());
     assertNotNull(response.getBody());
     assertEquals(studentId, response.getBody().id());
-    assertEquals(newName, response.getBody().name());
+    assertEquals("Updated Harry Potter", response.getBody().name());
     assertEquals(schoolId, response.getBody().schoolId());
 
-    verify(studentDtoMapper).toUpdateCommand(schoolId, studentId, newName);
+    verify(studentDtoMapper).toUpdateCommand(request, schoolId, studentId);
     verify(updateStudentUseCase).handle(expectedCommand);
     verify(getStudentByIdUseCase).handle(any());
     verify(studentDtoMapper).toResponse(student);
@@ -334,10 +331,11 @@ class SchoolStudentControllerTest {
     // Arrange
     UUID studentId = UUID.randomUUID();
     UUID schoolId = UUID.randomUUID();
-    String newName = "Updated Harry Potter";
-    UpdateStudentCommand expectedCommand = new UpdateStudentCommand(schoolId, studentId, newName);
+    StudentRequest request = new StudentRequest("Updated Harry Potter");
+    UpdateStudentCommand expectedCommand =
+        new UpdateStudentCommand(schoolId, studentId, "Updated Harry Potter");
 
-    when(studentDtoMapper.toUpdateCommand(schoolId, studentId, newName))
+    when(studentDtoMapper.toUpdateCommand(request, schoolId, studentId))
         .thenReturn(expectedCommand);
     doThrow(new NotFoundException("Student", studentId.toString()))
         .when(updateStudentUseCase)
@@ -345,9 +343,9 @@ class SchoolStudentControllerTest {
 
     // Act & Assert
     assertThrows(
-        NotFoundException.class, () -> controller.updateStudent(schoolId, studentId, newName));
+        NotFoundException.class, () -> controller.updateStudent(schoolId, studentId, request));
 
-    verify(studentDtoMapper).toUpdateCommand(schoolId, studentId, newName);
+    verify(studentDtoMapper).toUpdateCommand(request, schoolId, studentId);
     verify(updateStudentUseCase).handle(expectedCommand);
     verify(getStudentByIdUseCase, never()).handle(any());
     verify(studentDtoMapper, never()).toResponse(any());

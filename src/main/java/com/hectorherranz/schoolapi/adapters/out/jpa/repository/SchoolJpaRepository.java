@@ -49,4 +49,24 @@ public class SchoolJpaRepository implements SchoolRepositoryPort {
   public void deleteById(UUID id) {
     repo.deleteById(id);
   }
+
+  @Override
+  public Optional<School> findByIdForStudentUpdate(UUID id) {
+    return repo.findByIdWithStudentsOnly(id).map(SchoolEntityMapper::toDomain);
+  }
+
+  @Override
+  public int countStudentsBySchoolId(UUID schoolId) {
+    return repo.countStudentsBySchoolId(schoolId);
+  }
+
+  @Override
+  public Optional<School> findByIdBasic(UUID id) {
+    return repo.findByIdBasic(id).map(SchoolEntityMapper::toDomain);
+  }
+
+  @Override
+  public Optional<School> findByIdBasicForUpdate(UUID id) {
+    return repo.findByIdBasicForUpdate(id).map(SchoolEntityMapper::toDomain);
+  }
 }

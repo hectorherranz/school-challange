@@ -21,7 +21,12 @@ public class GetStudentByIdHandler implements GetStudentByIdUseCase {
   @Override
   public Student handle(GetStudentByIdQuery query) {
     return studentRepository
-        .findById(query.studentId())
-        .orElseThrow(() -> new NotFoundException("Student", query.studentId().toString()));
+        .findByIdAndSchoolId(query.studentId(), query.schoolId())
+        .orElseThrow(
+            () ->
+                new NotFoundException(
+                    "Student",
+                    String.format(
+                        "Student %s not found in school %s", query.studentId(), query.schoolId())));
   }
 }

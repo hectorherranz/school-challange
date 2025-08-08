@@ -1,11 +1,12 @@
 package com.hectorherranz.schoolapi.application.handler;
 
+import com.hectorherranz.schoolapi.adapters.out.jpa.service.StudentInfrastructureService;
 import com.hectorherranz.schoolapi.application.command.CreateStudentCommand;
 import com.hectorherranz.schoolapi.application.port.in.CreateStudentUseCase;
+import com.hectorherranz.schoolapi.domain.exception.CapacityExceededException;
 import com.hectorherranz.schoolapi.domain.exception.NotFoundException;
 import com.hectorherranz.schoolapi.domain.model.School;
 import com.hectorherranz.schoolapi.domain.model.Student;
-import com.hectorherranz.schoolapi.domain.model.draft.StudentDraft;
 import com.hectorherranz.schoolapi.domain.repository.SchoolRepositoryPort;
 import java.util.UUID;
 import org.springframework.stereotype.Component;
@@ -16,28 +17,33 @@ import org.springframework.transaction.annotation.Transactional;
 public class CreateStudentHandler implements CreateStudentUseCase {
 
   private final SchoolRepositoryPort schoolRepository;
+  private final StudentInfrastructureService studentInfrastructureService;
 
-  public CreateStudentHandler(SchoolRepositoryPort schoolRepository) {
+  public CreateStudentHandler(
+      SchoolRepositoryPort schoolRepository,
+      StudentInfrastructureService studentInfrastructureService) {
     this.schoolRepository = schoolRepository;
+    this.studentInfrastructureService = studentInfrastructureService;
   }
 
   @Override
   public UUID handle(CreateStudentCommand command) {
-    // Find the school
+    // 1. Validate school exists and get basic data
     School school =
         schoolRepository
-            .findById(command.schoolId())
+            .findByIdBasic(command.schoolId())
             .orElseThrow(() -> new NotFoundException("School", command.schoolId().toString()));
 
-    // Create student draft
-    StudentDraft draft = new StudentDraft(command.name());
+    // 2. Check capacity with optimized query
+    int currentEnrollment = schoolRepository.countStudentsBySchoolId(command.schoolId());
+    if (!school.capacity().canEnroll(currentEnrollment)) {
+      throw new CapacityExceededException(command.schoolId());
+    }
 
-    // Enroll student through the school aggregate
-    Student student = school.enrollStudent(draft);
+    // 3. Create student using infrastructure service
+    Student student = new Student(UUID.randomUUID(), command.name(), command.schoolId());
+    Student savedStudent = studentInfrastructureService.createStudent(student);
 
-    // Save the updated school (which includes the new student)
-    schoolRepository.save(school);
-
-    return student.id();
+    return savedStudent.id();
   }
 }

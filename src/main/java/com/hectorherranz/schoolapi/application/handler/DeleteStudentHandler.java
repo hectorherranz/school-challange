@@ -3,7 +3,7 @@ package com.hectorherranz.schoolapi.application.handler;
 import com.hectorherranz.schoolapi.application.command.DeleteStudentCommand;
 import com.hectorherranz.schoolapi.application.port.in.DeleteStudentUseCase;
 import com.hectorherranz.schoolapi.domain.exception.NotFoundException;
-import com.hectorherranz.schoolapi.domain.repository.SchoolRepositoryPort;
+import com.hectorherranz.schoolapi.domain.repository.StudentRepositoryPort;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -11,24 +11,23 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public class DeleteStudentHandler implements DeleteStudentUseCase {
 
-  private final SchoolRepositoryPort schoolRepository;
+  private final StudentRepositoryPort studentRepository;
 
-  public DeleteStudentHandler(SchoolRepositoryPort schoolRepository) {
-    this.schoolRepository = schoolRepository;
+  public DeleteStudentHandler(StudentRepositoryPort studentRepository) {
+    this.studentRepository = studentRepository;
   }
 
   @Override
   public void handle(DeleteStudentCommand command) {
-    // Find the school
-    var school =
-        schoolRepository
-            .findById(command.schoolId())
-            .orElseThrow(() -> new NotFoundException("School", command.schoolId().toString()));
+    // Validate student exists and belongs to school using optimized query
+    if (!studentRepository.existsByIdAndSchoolId(command.studentId(), command.schoolId())) {
+      throw new NotFoundException(
+          "Student",
+          String.format(
+              "Student %s not found in school %s", command.studentId(), command.schoolId()));
+    }
 
-    // Remove student through the school aggregate
-    school.removeStudent(command.studentId());
-
-    // Save the updated school
-    schoolRepository.save(school);
+    // Delete student directly (validation already done)
+    studentRepository.deleteById(command.studentId());
   }
 }

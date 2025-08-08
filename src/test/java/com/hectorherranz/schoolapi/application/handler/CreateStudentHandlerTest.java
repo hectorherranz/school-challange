@@ -4,9 +4,12 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
+import com.hectorherranz.schoolapi.adapters.out.jpa.service.StudentInfrastructureService;
 import com.hectorherranz.schoolapi.application.command.CreateStudentCommand;
+import com.hectorherranz.schoolapi.domain.exception.CapacityExceededException;
 import com.hectorherranz.schoolapi.domain.exception.NotFoundException;
 import com.hectorherranz.schoolapi.domain.model.School;
+import com.hectorherranz.schoolapi.domain.model.Student;
 import com.hectorherranz.schoolapi.domain.model.valueobject.Capacity;
 import com.hectorherranz.schoolapi.domain.repository.SchoolRepositoryPort;
 import java.util.Optional;
@@ -21,12 +24,13 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class CreateStudentHandlerTest {
 
   @Mock private SchoolRepositoryPort schoolRepository;
+  @Mock private StudentInfrastructureService studentInfrastructureService;
 
   private CreateStudentHandler handler;
 
   @BeforeEach
   void setUp() {
-    handler = new CreateStudentHandler(schoolRepository);
+    handler = new CreateStudentHandler(schoolRepository, studentInfrastructureService);
   }
 
   @Test
@@ -37,17 +41,20 @@ class CreateStudentHandlerTest {
     CreateStudentCommand command = new CreateStudentCommand(studentName, schoolId);
 
     School school = new School(schoolId, "Hogwarts", new Capacity(500));
+    Student student = new Student(UUID.randomUUID(), studentName, schoolId);
 
-    when(schoolRepository.findById(schoolId)).thenReturn(Optional.of(school));
-    when(schoolRepository.save(any(School.class))).thenReturn(school);
+    when(schoolRepository.findByIdBasic(schoolId)).thenReturn(Optional.of(school));
+    when(schoolRepository.countStudentsBySchoolId(schoolId)).thenReturn(100);
+    when(studentInfrastructureService.createStudent(any(Student.class))).thenReturn(student);
 
     // Act
     UUID result = handler.handle(command);
 
     // Assert
     assertNotNull(result);
-    verify(schoolRepository).findById(schoolId);
-    verify(schoolRepository).save(school);
+    verify(schoolRepository).findByIdBasic(schoolId);
+    verify(schoolRepository).countStudentsBySchoolId(schoolId);
+    verify(studentInfrastructureService).createStudent(any(Student.class));
   }
 
   @Test
@@ -57,54 +64,37 @@ class CreateStudentHandlerTest {
     String studentName = "Harry Potter";
     CreateStudentCommand command = new CreateStudentCommand(studentName, schoolId);
 
-    when(schoolRepository.findById(schoolId)).thenReturn(Optional.empty());
+    when(schoolRepository.findByIdBasic(schoolId)).thenReturn(Optional.empty());
 
     // Act & Assert
     NotFoundException exception =
         assertThrows(NotFoundException.class, () -> handler.handle(command));
 
     assertEquals("School not found with identifier: " + schoolId, exception.getMessage());
-    verify(schoolRepository).findById(schoolId);
-    verify(schoolRepository, never()).save(any(School.class));
+    verify(schoolRepository).findByIdBasic(schoolId);
+    verify(schoolRepository, never()).countStudentsBySchoolId(any());
+    verify(studentInfrastructureService, never()).createStudent(any());
   }
 
   @Test
-  void handle_ValidCommand_SavesUpdatedSchool() {
+  void handle_CapacityExceeded_ThrowsCapacityExceededException() {
     // Arrange
     UUID schoolId = UUID.randomUUID();
-    String studentName = "Ron Weasley";
+    String studentName = "Harry Potter";
     CreateStudentCommand command = new CreateStudentCommand(studentName, schoolId);
 
-    School school = new School(schoolId, "Hogwarts", new Capacity(500));
+    School school = new School(schoolId, "Hogwarts", new Capacity(100));
 
-    when(schoolRepository.findById(schoolId)).thenReturn(Optional.of(school));
-    when(schoolRepository.save(any(School.class))).thenReturn(school);
+    when(schoolRepository.findByIdBasic(schoolId)).thenReturn(Optional.of(school));
+    when(schoolRepository.countStudentsBySchoolId(schoolId)).thenReturn(100);
 
-    // Act
-    handler.handle(command);
+    // Act & Assert
+    CapacityExceededException exception =
+        assertThrows(CapacityExceededException.class, () -> handler.handle(command));
 
-    // Assert
-    verify(schoolRepository).save(school);
-  }
-
-  @Test
-  void handle_ValidCommand_EnrollsStudentThroughSchoolAggregate() {
-    // Arrange
-    UUID schoolId = UUID.randomUUID();
-    String studentName = "Neville Longbottom";
-    CreateStudentCommand command = new CreateStudentCommand(studentName, schoolId);
-
-    School school = new School(schoolId, "Hogwarts", new Capacity(500));
-
-    when(schoolRepository.findById(schoolId)).thenReturn(Optional.of(school));
-    when(schoolRepository.save(any(School.class))).thenReturn(school);
-
-    // Act
-    UUID result = handler.handle(command);
-
-    // Assert
-    assertNotNull(result);
-    verify(schoolRepository).findById(schoolId);
-    verify(schoolRepository).save(school);
+    assertEquals("School " + schoolId + " is at maximum capacity", exception.getMessage());
+    verify(schoolRepository).findByIdBasic(schoolId);
+    verify(schoolRepository).countStudentsBySchoolId(schoolId);
+    verify(studentInfrastructureService, never()).createStudent(any());
   }
 }

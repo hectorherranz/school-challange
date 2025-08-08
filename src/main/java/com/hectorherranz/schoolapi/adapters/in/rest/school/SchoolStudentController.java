@@ -3,10 +3,7 @@ package com.hectorherranz.schoolapi.adapters.in.rest.school;
 import com.hectorherranz.schoolapi.adapters.in.rest.dto.StudentRequest;
 import com.hectorherranz.schoolapi.adapters.in.rest.dto.StudentResponse;
 import com.hectorherranz.schoolapi.adapters.in.rest.mapper.StudentDtoMapper;
-import com.hectorherranz.schoolapi.application.command.DeleteStudentCommand;
 import com.hectorherranz.schoolapi.application.port.in.*;
-import com.hectorherranz.schoolapi.application.query.GetStudentByIdQuery;
-import com.hectorherranz.schoolapi.application.query.SearchStudentsQuery;
 import com.hectorherranz.schoolapi.application.response.PagedResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -29,7 +26,7 @@ public class SchoolStudentController {
 
   private final CreateStudentUseCase createStudentUseCase;
   private final GetStudentByIdUseCase getStudentByIdUseCase;
-  private final UpdateStudentUseCase updateStudentUseCase;
+  private final UpdateStudentUseCase updateStudentUseCase; // Hybrid approach (optimized by default)
   private final DeleteStudentUseCase deleteStudentUseCase;
   private final SearchStudentsUseCase searchStudentsUseCase;
   private final StudentDtoMapper studentDtoMapper;
@@ -37,13 +34,13 @@ public class SchoolStudentController {
   public SchoolStudentController(
       CreateStudentUseCase createStudentUseCase,
       GetStudentByIdUseCase getStudentByIdUseCase,
-      UpdateStudentUseCase updateStudentUseCase,
+      UpdateStudentUseCase updateStudentUseCase, // Hybrid approach (optimized by default)
       DeleteStudentUseCase deleteStudentUseCase,
       SearchStudentsUseCase searchStudentsUseCase,
       StudentDtoMapper studentDtoMapper) {
     this.createStudentUseCase = createStudentUseCase;
     this.getStudentByIdUseCase = getStudentByIdUseCase;
-    this.updateStudentUseCase = updateStudentUseCase;
+    this.updateStudentUseCase = updateStudentUseCase; // Uses hybrid approach
     this.deleteStudentUseCase = deleteStudentUseCase;
     this.searchStudentsUseCase = searchStudentsUseCase;
     this.studentDtoMapper = studentDtoMapper;
@@ -68,7 +65,7 @@ public class SchoolStudentController {
     var command = studentDtoMapper.toCreateCommand(request, schoolId);
     UUID studentId = createStudentUseCase.handle(command);
 
-    var query = new GetStudentByIdQuery(studentId);
+    var query = studentDtoMapper.toGetStudentQuery(studentId, schoolId);
     var student = getStudentByIdUseCase.handle(query);
     var response = studentDtoMapper.toResponse(student);
 
@@ -81,36 +78,28 @@ public class SchoolStudentController {
       description = "Retrieves details of a specific student in the school")
   public ResponseEntity<StudentResponse> getStudentById(
       @PathVariable UUID schoolId, @PathVariable UUID studentId) {
-    var query = new GetStudentByIdQuery(studentId);
+    var query = studentDtoMapper.toGetStudentQuery(studentId, schoolId);
     var student = getStudentByIdUseCase.handle(query);
-
-    // Verify the student belongs to the specified school
-    if (!student.schoolId().equals(schoolId)) {
-      return ResponseEntity.notFound().build();
-    }
-
     var response = studentDtoMapper.toResponse(student);
+
     return ResponseEntity.ok(response);
   }
 
   @PutMapping("/{studentId}")
   @Operation(
       summary = "Update student",
-      description = "Updates a student's information in the school")
+      description = "Updates a student's information using hybrid approach (optimized by default)")
   public ResponseEntity<StudentResponse> updateStudent(
-      @PathVariable UUID schoolId, @PathVariable UUID studentId, @RequestParam String name) {
-    var command = studentDtoMapper.toUpdateCommand(schoolId, studentId, name);
-    updateStudentUseCase.handle(command);
+      @PathVariable UUID schoolId,
+      @PathVariable UUID studentId,
+      @Valid @RequestBody StudentRequest request) {
+    var command = studentDtoMapper.toUpdateCommand(request, schoolId, studentId);
+    updateStudentUseCase.handle(command); // Uses hybrid approach
 
-    var query = new GetStudentByIdQuery(studentId);
+    var query = studentDtoMapper.toGetStudentQuery(studentId, schoolId);
     var student = getStudentByIdUseCase.handle(query);
-
-    // Verify the student belongs to the specified school
-    if (!student.schoolId().equals(schoolId)) {
-      return ResponseEntity.notFound().build();
-    }
-
     var response = studentDtoMapper.toResponse(student);
+
     return ResponseEntity.ok(response);
   }
 
@@ -118,7 +107,7 @@ public class SchoolStudentController {
   @Operation(summary = "Remove student", description = "Removes a student from the school")
   public ResponseEntity<Void> removeStudent(
       @PathVariable UUID schoolId, @PathVariable UUID studentId) {
-    var command = new DeleteStudentCommand(schoolId, studentId);
+    var command = studentDtoMapper.toDeleteCommand(schoolId, studentId);
     deleteStudentUseCase.handle(command);
 
     return ResponseEntity.noContent().build();
@@ -135,12 +124,12 @@ public class SchoolStudentController {
       @RequestParam(defaultValue = "20") int size) {
 
     Pageable pageable = PageRequest.of(page, size);
-    var searchQuery = new SearchStudentsQuery(schoolId, query, pageable);
+    var searchQuery = studentDtoMapper.toSearchQuery(schoolId, query, pageable);
     var result = searchStudentsUseCase.handle(searchQuery);
 
     var responses = result.content().stream().map(studentDtoMapper::toResponse).toList();
 
-    var response =
+    var pagedResponse =
         new PagedResponse<>(
             responses,
             result.pageNumber(),
@@ -150,6 +139,6 @@ public class SchoolStudentController {
             result.hasNext(),
             result.hasPrevious());
 
-    return ResponseEntity.ok(response);
+    return ResponseEntity.ok(pagedResponse);
   }
 }

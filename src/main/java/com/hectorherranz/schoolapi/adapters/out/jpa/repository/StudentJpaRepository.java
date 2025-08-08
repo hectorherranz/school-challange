@@ -32,7 +32,7 @@ public class StudentJpaRepository implements StudentRepositoryPort {
         .map(StudentEntityMapper::toDomain);
   }
 
-  /* ---------- Writes (update only) ---------- */
+  /* ---------- Writes ---------- */
 
   @Transactional
   @Override
@@ -50,5 +50,25 @@ public class StudentJpaRepository implements StudentRepositoryPort {
   @Override
   public void deleteById(UUID id) {
     repo.deleteById(id);
+  }
+
+  @Override
+  public Optional<Student> findByIdAndSchoolId(UUID studentId, UUID schoolId) {
+    return repo.findByIdAndSchoolId(studentId, schoolId).map(StudentEntityMapper::toDomain);
+  }
+
+  @Override
+  public boolean existsByIdAndSchoolId(UUID studentId, UUID schoolId) {
+    return repo.existsByIdAndSchoolId(studentId, schoolId);
+  }
+
+  @Override
+  public Optional<Student> findStudentByIdAndSchoolId(UUID studentId, UUID schoolId) {
+    return repo.findStudentByIdAndSchoolId(studentId, schoolId).map(StudentEntityMapper::toDomain);
+  }
+
+  @Override
+  public Optional<Object> findStudentEntityByIdAndSchoolId(UUID studentId, UUID schoolId) {
+    return repo.findStudentByIdAndSchoolId(studentId, schoolId).map(entity -> entity);
   }
 }

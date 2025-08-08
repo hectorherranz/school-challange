@@ -14,4 +14,15 @@ public interface StudentRepositoryPort {
   Student save(Student student); // usually cascaded via School, but handy for updates
 
   void deleteById(UUID id);
+
+  // Optimized methods for school validation
+  Optional<Student> findByIdAndSchoolId(UUID studentId, UUID schoolId);
+
+  boolean existsByIdAndSchoolId(UUID studentId, UUID schoolId);
+
+  // New methods for selective loading
+  Optional<Student> findStudentByIdAndSchoolId(UUID studentId, UUID schoolId);
+
+  // Hibernate-optimized methods (return entities for complex operations)
+  Optional<Object> findStudentEntityByIdAndSchoolId(UUID studentId, UUID schoolId);
 }

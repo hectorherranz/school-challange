@@ -28,16 +28,17 @@ class GetStudentByIdHandlerTest {
   }
 
   @Test
-  void handle_StudentExists_ReturnsStudent() {
+  void handle_StudentExistsInSchool_ReturnsStudent() {
     // Arrange
     UUID studentId = UUID.randomUUID();
     String studentName = "Harry Potter";
     UUID schoolId = UUID.randomUUID();
 
     Student expectedStudent = new Student(studentId, studentName, schoolId);
-    GetStudentByIdQuery query = new GetStudentByIdQuery(studentId);
+    GetStudentByIdQuery query = new GetStudentByIdQuery(studentId, schoolId);
 
-    when(studentRepository.findById(studentId)).thenReturn(Optional.of(expectedStudent));
+    when(studentRepository.findByIdAndSchoolId(studentId, schoolId))
+        .thenReturn(Optional.of(expectedStudent));
 
     // Act
     Student result = handler.handle(query);
@@ -47,60 +48,28 @@ class GetStudentByIdHandlerTest {
     assertEquals(studentId, result.id());
     assertEquals(studentName, result.name());
     assertEquals(schoolId, result.schoolId());
-    verify(studentRepository).findById(studentId);
+    verify(studentRepository).findByIdAndSchoolId(studentId, schoolId);
   }
 
   @Test
-  void handle_StudentNotFound_ThrowsNotFoundException() {
+  void handle_StudentNotFoundInSchool_ThrowsNotFoundException() {
     // Arrange
     UUID studentId = UUID.randomUUID();
-    GetStudentByIdQuery query = new GetStudentByIdQuery(studentId);
+    UUID schoolId = UUID.randomUUID();
+    GetStudentByIdQuery query = new GetStudentByIdQuery(studentId, schoolId);
 
-    when(studentRepository.findById(studentId)).thenReturn(Optional.empty());
+    when(studentRepository.findByIdAndSchoolId(studentId, schoolId)).thenReturn(Optional.empty());
 
     // Act & Assert
     NotFoundException exception =
         assertThrows(NotFoundException.class, () -> handler.handle(query));
 
-    assertEquals("Student not found with identifier: " + studentId, exception.getMessage());
-    verify(studentRepository).findById(studentId);
-  }
-
-  @Test
-  void handle_ValidQuery_ReturnsCorrectStudent() {
-    // Arrange
-    UUID studentId = UUID.randomUUID();
-    String studentName = "Hermione Granger";
-    UUID schoolId = UUID.randomUUID();
-
-    Student expectedStudent = new Student(studentId, studentName, schoolId);
-    GetStudentByIdQuery query = new GetStudentByIdQuery(studentId);
-
-    when(studentRepository.findById(studentId)).thenReturn(Optional.of(expectedStudent));
-
-    // Act
-    Student result = handler.handle(query);
-
-    // Assert
-    assertNotNull(result);
-    assertEquals(studentId, result.id());
-    assertEquals(studentName, result.name());
-    assertEquals(schoolId, result.schoolId());
-  }
-
-  @Test
-  void handle_ValidQuery_CallsRepositoryWithCorrectId() {
-    // Arrange
-    UUID studentId = UUID.randomUUID();
-    GetStudentByIdQuery query = new GetStudentByIdQuery(studentId);
-
-    Student expectedStudent = new Student(studentId, "Test Student", UUID.randomUUID());
-    when(studentRepository.findById(studentId)).thenReturn(Optional.of(expectedStudent));
-
-    // Act
-    handler.handle(query);
-
-    // Assert
-    verify(studentRepository).findById(studentId);
+    assertEquals(
+        "Student not found with identifier: Student "
+            + studentId
+            + " not found in school "
+            + schoolId,
+        exception.getMessage());
+    verify(studentRepository).findByIdAndSchoolId(studentId, schoolId);
   }
 }

@@ -38,6 +38,11 @@ public class School extends AggregateRoot {
     return school;
   }
 
+  /** Constructor for selective loading (only basic school data) */
+  public static School rehydrateBasic(UUID id, String name, Capacity capacity) {
+    return new School(id, name, capacity);
+  }
+
   /* ---------- business operations ---------- */
 
   public Student enrollStudent(StudentDraft draft) {
@@ -55,6 +60,18 @@ public class School extends AggregateRoot {
     Student student = studentsById.get(studentId);
     if (student == null) {
       throw new NotFoundException("Student", studentId.toString());
+    }
+
+    // Create updated student with new name
+    Student updatedStudent = new Student(studentId, newName, this.id);
+    studentsById.put(studentId, updatedStudent);
+  }
+
+  /** Optimized method for updating a specific student without loading all students */
+  public void updateStudentSelective(UUID studentId, String newName, Student existingStudent) {
+    // Validate the student belongs to this school
+    if (!existingStudent.schoolId().equals(this.id)) {
+      throw new NotFoundException("Student", "Student does not belong to this school");
     }
 
     // Create updated student with new name

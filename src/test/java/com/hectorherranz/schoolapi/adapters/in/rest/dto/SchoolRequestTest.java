@@ -72,7 +72,7 @@ class SchoolRequestTest {
     assertEquals(1, violations.size());
     ConstraintViolation<SchoolRequest> violation = violations.iterator().next();
     assertEquals("capacity", violation.getPropertyPath().toString());
-    assertEquals("School capacity must be positive", violation.getMessage());
+    assertEquals("School capacity must be at least 50", violation.getMessage());
   }
 
   @Test
@@ -87,7 +87,7 @@ class SchoolRequestTest {
     assertEquals(1, violations.size());
     ConstraintViolation<SchoolRequest> violation = violations.iterator().next();
     assertEquals("capacity", violation.getPropertyPath().toString());
-    assertEquals("School capacity must be positive", violation.getMessage());
+    assertEquals("School capacity must be at least 50", violation.getMessage());
   }
 
   @Test

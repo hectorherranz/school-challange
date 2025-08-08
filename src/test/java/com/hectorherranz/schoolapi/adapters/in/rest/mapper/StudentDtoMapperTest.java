@@ -44,9 +44,10 @@ class StudentDtoMapperTest {
   void shouldMapToUpdateCommand() {
     // Given
     String newName = "Updated Harry Potter";
+    StudentRequest request = new StudentRequest(newName);
 
     // When
-    UpdateStudentCommand command = mapper.toUpdateCommand(schoolId, studentId, newName);
+    UpdateStudentCommand command = mapper.toUpdateCommand(request, schoolId, studentId);
 
     // Then
     assertNotNull(command);
