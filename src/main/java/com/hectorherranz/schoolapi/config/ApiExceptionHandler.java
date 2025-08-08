@@ -6,7 +6,10 @@ import com.hectorherranz.schoolapi.domain.exception.NotFoundException;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -17,52 +20,42 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 public class ApiExceptionHandler {
 
   @ExceptionHandler(NotFoundException.class)
-  public ResponseEntity<Map<String, Object>> handleNotFoundException(NotFoundException ex) {
-    Map<String, Object> body = new HashMap<>();
-    body.put("timestamp", LocalDateTime.now());
-    body.put("status", HttpStatus.NOT_FOUND.value());
-    body.put("error", "Not Found");
-    body.put("message", ex.getMessage());
-    body.put("path", "/api"); // This will be overridden by actual path
-
-    return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
+  public ResponseEntity<ProblemDetail> handleNotFoundException(NotFoundException ex) {
+    var pd = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
+    pd.setTitle("Not Found");
+    pd.setProperty("timestamp", LocalDateTime.now());
+    return ResponseEntity.status(HttpStatus.NOT_FOUND)
+        .contentType(MediaType.APPLICATION_PROBLEM_JSON)
+        .body(pd);
   }
 
   @ExceptionHandler(CapacityExceededException.class)
-  public ResponseEntity<Map<String, Object>> handleCapacityExceededException(
+  public ResponseEntity<ProblemDetail> handleCapacityExceededException(
       CapacityExceededException ex) {
-    Map<String, Object> body = new HashMap<>();
-    body.put("timestamp", LocalDateTime.now());
-    body.put("status", HttpStatus.CONFLICT.value());
-    body.put("error", "Conflict");
-    body.put("message", ex.getMessage());
-    body.put("path", "/api");
-
-    return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
+    var pd = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
+    pd.setTitle("Capacity Exceeded");
+    pd.setProperty("timestamp", LocalDateTime.now());
+    return ResponseEntity.status(HttpStatus.CONFLICT)
+        .contentType(MediaType.APPLICATION_PROBLEM_JSON)
+        .body(pd);
   }
 
   @ExceptionHandler(DuplicateNameException.class)
-  public ResponseEntity<Map<String, Object>> handleDuplicateNameException(
-      DuplicateNameException ex) {
-    Map<String, Object> body = new HashMap<>();
-    body.put("timestamp", LocalDateTime.now());
-    body.put("status", HttpStatus.CONFLICT.value());
-    body.put("error", "Conflict");
-    body.put("message", ex.getMessage());
-    body.put("path", "/api");
-
-    return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
+  public ResponseEntity<ProblemDetail> handleDuplicateNameException(DuplicateNameException ex) {
+    var pd = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
+    pd.setTitle("Duplicate Name");
+    pd.setProperty("timestamp", LocalDateTime.now());
+    return ResponseEntity.status(HttpStatus.CONFLICT)
+        .contentType(MediaType.APPLICATION_PROBLEM_JSON)
+        .body(pd);
   }
 
   @ExceptionHandler(MethodArgumentNotValidException.class)
-  public ResponseEntity<Map<String, Object>> handleValidationExceptions(
+  public ResponseEntity<ProblemDetail> handleValidationExceptions(
       MethodArgumentNotValidException ex) {
-    Map<String, Object> body = new HashMap<>();
-    body.put("timestamp", LocalDateTime.now());
-    body.put("status", HttpStatus.BAD_REQUEST.value());
-    body.put("error", "Bad Request");
-    body.put("message", "Validation failed");
-    body.put("path", "/api");
+    var pd = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "Validation failed");
+    pd.setTitle("Bad Request");
+    pd.setProperty("timestamp", LocalDateTime.now());
 
     Map<String, String> errors = new HashMap<>();
     ex.getBindingResult()
@@ -73,20 +66,32 @@ public class ApiExceptionHandler {
               String errorMessage = error.getDefaultMessage();
               errors.put(fieldName, errorMessage);
             });
-    body.put("errors", errors);
+    pd.setProperty("errors", errors);
 
-    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
+    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+        .contentType(MediaType.APPLICATION_PROBLEM_JSON)
+        .body(pd);
+  }
+
+  @ExceptionHandler(OptimisticLockingFailureException.class)
+  public ResponseEntity<ProblemDetail> handleOptimistic(OptimisticLockingFailureException ex) {
+    var pd = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, "Version conflict");
+    pd.setTitle("Optimistic Locking Failure");
+    pd.setProperty("timestamp", LocalDateTime.now());
+    return ResponseEntity.status(HttpStatus.CONFLICT)
+        .contentType(MediaType.APPLICATION_PROBLEM_JSON)
+        .body(pd);
   }
 
   @ExceptionHandler(Exception.class)
-  public ResponseEntity<Map<String, Object>> handleGenericException(Exception ex) {
-    Map<String, Object> body = new HashMap<>();
-    body.put("timestamp", LocalDateTime.now());
-    body.put("status", HttpStatus.INTERNAL_SERVER_ERROR.value());
-    body.put("error", "Internal Server Error");
-    body.put("message", "An unexpected error occurred");
-    body.put("path", "/api");
-
-    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(body);
+  public ResponseEntity<ProblemDetail> handleGenericException(Exception ex) {
+    var pd =
+        ProblemDetail.forStatusAndDetail(
+            HttpStatus.INTERNAL_SERVER_ERROR, "An unexpected error occurred");
+    pd.setTitle("Internal Server Error");
+    pd.setProperty("timestamp", LocalDateTime.now());
+    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+        .contentType(MediaType.APPLICATION_PROBLEM_JSON)
+        .body(pd);
   }
 }

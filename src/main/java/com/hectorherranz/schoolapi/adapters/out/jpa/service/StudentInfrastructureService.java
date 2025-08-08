@@ -12,8 +12,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Service that leverages Hibernate optimizations for complex operations. This layer works directly
- * with entities to maximize performance.
+ * This service intentionally works with JPA entities to leverage Hibernate session optimizations;
+ * domain ports remain entity-agnostic.
+ *
+ * <p>This service leverages Hibernate optimizations for complex operations by working directly with
+ * entities to maximize performance. It serves as a bridge between domain logic and infrastructure
+ * optimizations, ensuring that entity-level access stays contained within the infrastructure layer
+ * while maintaining clean domain boundaries.
  */
 @Service
 @Transactional

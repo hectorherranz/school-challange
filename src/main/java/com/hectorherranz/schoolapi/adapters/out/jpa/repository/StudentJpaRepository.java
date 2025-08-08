@@ -66,9 +66,4 @@ public class StudentJpaRepository implements StudentRepositoryPort {
   public Optional<Student> findStudentByIdAndSchoolId(UUID studentId, UUID schoolId) {
     return repo.findStudentByIdAndSchoolId(studentId, schoolId).map(StudentEntityMapper::toDomain);
   }
-
-  @Override
-  public Optional<Object> findStudentEntityByIdAndSchoolId(UUID studentId, UUID schoolId) {
-    return repo.findStudentByIdAndSchoolId(studentId, schoolId).map(entity -> entity);
-  }
 }

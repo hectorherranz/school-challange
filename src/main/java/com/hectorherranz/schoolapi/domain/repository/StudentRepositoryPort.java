@@ -22,7 +22,4 @@ public interface StudentRepositoryPort {
 
   // New methods for selective loading
   Optional<Student> findStudentByIdAndSchoolId(UUID studentId, UUID schoolId);
-
-  // Hibernate-optimized methods (return entities for complex operations)
-  Optional<Object> findStudentEntityByIdAndSchoolId(UUID studentId, UUID schoolId);
 }
