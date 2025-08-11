@@ -5,11 +5,11 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 import com.hectorherranz.schoolapi.application.command.UpdateSchoolCommand;
+import com.hectorherranz.schoolapi.application.port.out.SchoolRepositoryPort;
 import com.hectorherranz.schoolapi.domain.exception.DuplicateNameException;
 import com.hectorherranz.schoolapi.domain.exception.NotFoundException;
 import com.hectorherranz.schoolapi.domain.model.School;
 import com.hectorherranz.schoolapi.domain.model.valueobject.Capacity;
-import com.hectorherranz.schoolapi.domain.repository.SchoolRepositoryPort;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;

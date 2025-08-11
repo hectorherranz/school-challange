@@ -4,10 +4,10 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
+import com.hectorherranz.schoolapi.application.port.out.StudentRepositoryPort;
 import com.hectorherranz.schoolapi.application.query.SearchStudentsQuery;
 import com.hectorherranz.schoolapi.application.response.PagedResponse;
 import com.hectorherranz.schoolapi.domain.model.Student;
-import com.hectorherranz.schoolapi.domain.repository.StudentRepositoryPort;
 import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;

@@ -2,9 +2,9 @@ package com.hectorherranz.schoolapi.adapters.out.jpa.repository;
 
 import com.hectorherranz.schoolapi.adapters.out.jpa.entity.StudentEntity;
 import com.hectorherranz.schoolapi.adapters.out.jpa.mapper.StudentEntityMapper;
+import com.hectorherranz.schoolapi.application.port.out.StudentRepositoryPort;
 import com.hectorherranz.schoolapi.domain.exception.NotFoundException;
 import com.hectorherranz.schoolapi.domain.model.Student;
-import com.hectorherranz.schoolapi.domain.repository.StudentRepositoryPort;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.domain.Page;

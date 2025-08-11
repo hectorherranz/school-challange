@@ -1,10 +1,10 @@
 package com.hectorherranz.schoolapi.application.handler;
 
 import com.hectorherranz.schoolapi.application.port.in.SearchSchoolsUseCase;
+import com.hectorherranz.schoolapi.application.port.out.SchoolRepositoryPort;
 import com.hectorherranz.schoolapi.application.query.SearchSchoolsQuery;
 import com.hectorherranz.schoolapi.application.response.PagedResponse;
 import com.hectorherranz.schoolapi.domain.model.School;
-import com.hectorherranz.schoolapi.domain.repository.SchoolRepositoryPort;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 

@@ -5,8 +5,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 import com.hectorherranz.schoolapi.application.command.DeleteStudentCommand;
+import com.hectorherranz.schoolapi.application.port.out.StudentRepositoryPort;
 import com.hectorherranz.schoolapi.domain.exception.NotFoundException;
-import com.hectorherranz.schoolapi.domain.repository.StudentRepositoryPort;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

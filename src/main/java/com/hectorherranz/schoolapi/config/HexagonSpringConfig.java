@@ -4,8 +4,8 @@ import com.hectorherranz.schoolapi.adapters.out.jpa.repository.SchoolJpaReposito
 import com.hectorherranz.schoolapi.adapters.out.jpa.repository.SpringDataSchoolRepository;
 import com.hectorherranz.schoolapi.adapters.out.jpa.repository.SpringDataStudentRepository;
 import com.hectorherranz.schoolapi.adapters.out.jpa.repository.StudentJpaRepository;
-import com.hectorherranz.schoolapi.domain.repository.SchoolRepositoryPort;
-import com.hectorherranz.schoolapi.domain.repository.StudentRepositoryPort;
+import com.hectorherranz.schoolapi.application.port.out.SchoolRepositoryPort;
+import com.hectorherranz.schoolapi.application.port.out.StudentRepositoryPort;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;

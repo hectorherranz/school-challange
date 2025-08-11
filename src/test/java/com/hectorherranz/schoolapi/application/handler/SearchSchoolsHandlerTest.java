@@ -4,11 +4,11 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
+import com.hectorherranz.schoolapi.application.port.out.SchoolRepositoryPort;
 import com.hectorherranz.schoolapi.application.query.SearchSchoolsQuery;
 import com.hectorherranz.schoolapi.application.response.PagedResponse;
 import com.hectorherranz.schoolapi.domain.model.School;
 import com.hectorherranz.schoolapi.domain.model.valueobject.Capacity;
-import com.hectorherranz.schoolapi.domain.repository.SchoolRepositoryPort;
 import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;

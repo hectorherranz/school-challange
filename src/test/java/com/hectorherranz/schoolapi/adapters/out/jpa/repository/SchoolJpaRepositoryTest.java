@@ -2,9 +2,9 @@ package com.hectorherranz.schoolapi.adapters.out.jpa.repository;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import com.hectorherranz.schoolapi.application.port.out.SchoolRepositoryPort;
 import com.hectorherranz.schoolapi.domain.model.School;
 import com.hectorherranz.schoolapi.domain.model.valueobject.Capacity;
-import com.hectorherranz.schoolapi.domain.repository.SchoolRepositoryPort;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;

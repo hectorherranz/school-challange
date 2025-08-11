@@ -1,10 +1,10 @@
 package com.hectorherranz.schoolapi.application.handler;
 
 import com.hectorherranz.schoolapi.application.port.in.GetStudentByIdUseCase;
+import com.hectorherranz.schoolapi.application.port.out.StudentRepositoryPort;
 import com.hectorherranz.schoolapi.application.query.GetStudentByIdQuery;
 import com.hectorherranz.schoolapi.domain.exception.NotFoundException;
 import com.hectorherranz.schoolapi.domain.model.Student;
-import com.hectorherranz.schoolapi.domain.repository.StudentRepositoryPort;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 

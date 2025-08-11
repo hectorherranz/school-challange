@@ -2,8 +2,8 @@ package com.hectorherranz.schoolapi.application.handler;
 
 import com.hectorherranz.schoolapi.application.command.DeleteSchoolCommand;
 import com.hectorherranz.schoolapi.application.port.in.DeleteSchoolUseCase;
+import com.hectorherranz.schoolapi.application.port.out.SchoolRepositoryPort;
 import com.hectorherranz.schoolapi.domain.exception.NotFoundException;
-import com.hectorherranz.schoolapi.domain.repository.SchoolRepositoryPort;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 

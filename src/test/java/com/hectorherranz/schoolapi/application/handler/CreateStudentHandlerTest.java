@@ -6,12 +6,12 @@ import static org.mockito.Mockito.*;
 
 import com.hectorherranz.schoolapi.adapters.out.jpa.service.StudentInfrastructureService;
 import com.hectorherranz.schoolapi.application.command.CreateStudentCommand;
+import com.hectorherranz.schoolapi.application.port.out.SchoolRepositoryPort;
 import com.hectorherranz.schoolapi.domain.exception.CapacityExceededException;
 import com.hectorherranz.schoolapi.domain.exception.NotFoundException;
 import com.hectorherranz.schoolapi.domain.model.School;
 import com.hectorherranz.schoolapi.domain.model.Student;
 import com.hectorherranz.schoolapi.domain.model.valueobject.Capacity;
-import com.hectorherranz.schoolapi.domain.repository.SchoolRepositoryPort;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;

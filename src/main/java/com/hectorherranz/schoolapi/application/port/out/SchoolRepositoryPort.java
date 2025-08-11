@@ -1,4 +1,4 @@
-package com.hectorherranz.schoolapi.domain.repository;
+package com.hectorherranz.schoolapi.application.port.out;
 
 import com.hectorherranz.schoolapi.domain.model.School;
 import java.util.Optional;

@@ -2,10 +2,10 @@ package com.hectorherranz.schoolapi.application.handler;
 
 import com.hectorherranz.schoolapi.application.command.CreateSchoolCommand;
 import com.hectorherranz.schoolapi.application.port.in.CreateSchoolUseCase;
+import com.hectorherranz.schoolapi.application.port.out.SchoolRepositoryPort;
 import com.hectorherranz.schoolapi.domain.exception.DuplicateNameException;
 import com.hectorherranz.schoolapi.domain.model.School;
 import com.hectorherranz.schoolapi.domain.model.valueobject.Capacity;
-import com.hectorherranz.schoolapi.domain.repository.SchoolRepositoryPort;
 import java.util.UUID;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
