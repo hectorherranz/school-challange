@@ -120,6 +120,23 @@ The application is delivered as a runnable Docker image:
 
 ---
 
+## Future Work
+
+This project was developed within a **2-day time allocation**. Since [commit fa73308](https://github.com/hectorherranz/school-challange/commit/fa73308aba8e393ac7493e94a87f43ce62b97168), the API is fully functional and usable, but several architectural improvements and optimizations were left for future iterations:
+
+### Pending Tasks
+
+- **Move `@Transactional` from JPA adapters to application handlers** to enforce proper transaction boundaries
+- **Decouple application handlers from adapter services**; depend only on `application.port.out` interfaces
+- **Implement domain event publishing** (finish `SpringEventPublisher.publish`, call `pullDomainEvents()` in handlers) and relocate `DomainEventPublisher` to `application.port.out` (It's actually out of scope)
+- **Stop leaking Spring `Pageable` into application**; use app-specific pagination DTOs and enforce max page size + default sorting
+- **Add a case-insensitive unique constraint on `schools.name` and `pg_trgm` GIN indexes for ILIKE searches** to ensure integrity and performance
+- **... and other refinements**
+
+These improvements would enhance the architecture's purity, performance, and maintainability while maintaining the current functionality.
+
+---
+
 ## License
 
 MIT License - see the `LICENSE` file for details.
